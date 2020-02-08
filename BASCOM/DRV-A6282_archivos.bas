@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 92
+$projecttime = 131
 
 
 '*******************************************************************************
@@ -32,13 +32,13 @@ Dim Tmpstr52 As String * 52
 
 'Matriz
 Dim Dato8 As Byte
-Dim Dato16 As Byte
+Dim Dato16 As Word
 Dim Datocol As Byte
 Dim Buffram(longbuf) As Byte
-Dim Tmptx As Byte
+'Dim Tmptx As Byte
 Dim Cntr_col As Byte
-Dim Kk As Byte
-Dim Ptrcol As Byte
+'Dim Kk As Byte
+'Dim Ptrcol As Byte
 
 
 'Variables TIMER0
@@ -131,18 +131,35 @@ Int_timer2:                                                 ' Ints a 1000 Hz si
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
-   Ptrcol = Lookup(cntr_col , Tbl_ptrcol)
-   For Kk = 1 To Nummatriz
-      Tmptx = Lookup(ptrcol , Tbl_poscol)
-      Dato8 = Buffram(tmptx)
-      Dato16 = Makeint(datocol , Dato8)
-      Shiftout Sdi , Clk , Dato16 , 1
-      Incr Ptrcol
-   Next
+
+   Dato8 = Buffram(cntr_col)
+   Dato16 = Makeint(dato8 , Datocol)
+   Shiftout Sdi , Clk , Dato16 , Opcion
+
+   Dato8 = Buffram(cntr_col + 8)
+   Dato16 = Makeint(dato8 , Datocol)
+   Shiftout Sdi , Clk , Dato16 , Opcion
+
+   Dato8 = Buffram(cntr_col + 16)
+   Dato16 = Makeint(dato8 , Datocol)
+   Shiftout Sdi , Clk , Dato16 , Opcion
+
+   Dato8 = Buffram(cntr_col + 24)
+   Dato16 = Makeint(dato8 , Datocol)
+   Shiftout Sdi , Clk , Dato16 , Opcion
+
+   Dato8 = Buffram(cntr_col + 32)
+   Dato16 = Makeint(dato8 , Datocol)
+   Shiftout Sdi , Clk , Dato16 , Opcion
 
    Set Lena
    Reset Lena
    Cntr_col = Cntr_col Mod 8
+   nop
+   nop
+   nop
+   nop
+   nop
    Reset Oena
 
 Return
@@ -252,6 +269,13 @@ Sub Procser()
                Cmderr = 5
             End If
 
+         Case "SETCER"
+            Cmderr = 0
+            Atsnd = "Buffram a cero"
+               For Tmpb = 1 To Longbuf
+                  Buffram(tmpb) = 0
+               Next
+
 
          Case Else
             Cmderr = 1
@@ -319,60 +343,6 @@ Data &B11111111111111001100110011001100&                    'Estado 14
 Data &B11111111111111000000000000001100&                    'Estado 15
 Data &B11111111111111111111111111110000&                    'Estado 16
 
-
-Tbl_ptrcol:
-Data 0                                                      'DUMMY
-Data 0
-Data 5
-Data 10
-Data 15
-Data 20
-Data 25
-Data 30
-Data 35
-
-Tbl_poscol:
-'Data 0
-Data 1                                                      '0
-Data 9                                                      '1
-Data 17                                                     '2
-Data 25                                                     '3
-Data 33                                                     '4
-Data 2                                                      '6                                                      '5
-Data 10
-Data 18
-Data 26
-Data 34
-Data 3
-Data 11
-Data 19
-Data 27
-Data 35
-Data 4
-Data 12
-Data 20
-Data 28
-Data 36
-Data 5
-Data 13
-Data 21
-Data 29
-Data 37
-Data 6
-Data 14
-Data 22
-Data 30
-Data 38
-Data 7
-Data 15
-Data 23
-Data 31
-Data 39
-Data 8
-Data 16
-Data 24
-Data 32
-Data 40
 
 
 Loaded_arch:
