@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 58
+$projecttime = 92
 
 
 '*******************************************************************************
@@ -26,7 +26,7 @@ Dim Tmpb As Byte
 Dim Cmdtmp As String * 6
 Dim Atsnd As String * 200
 Dim Cmderr As Byte
-Dim Tmpstr8 As String * 16
+'Dim Tmpstr8 As String * 16
 Dim Tmpstr52 As String * 52
 
 
@@ -38,9 +38,7 @@ Dim Buffram(longbuf) As Byte
 Dim Tmptx As Byte
 Dim Cntr_col As Byte
 Dim Kk As Byte
-Dim Ptrdig As Word
-Dim Ptrpos As Word
-Dim Bufdata(longdat) As Word
+Dim Ptrcol As Byte
 
 
 'Variables TIMER0
@@ -51,7 +49,6 @@ Dim Estado_led As Byte
 Dim Iluminar As Bit
 
 'TIMER 2
-Dim Csel As Byte
 
 'Variables SERIAL0
 Dim Ser_ini As Bit , Sernew As Bit
@@ -134,15 +131,13 @@ Int_timer2:                                                 ' Ints a 1000 Hz si
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
-
-   For Kk = 1 To Numtxser
-      Tmptx = Lookup(kk , Tbl_txser)
-      Tmptx = Tmptx + Cntr_col
+   Ptrcol = Lookup(cntr_col , Tbl_ptrcol)
+   For Kk = 1 To Nummatriz
+      Tmptx = Lookup(ptrcol , Tbl_poscol)
       Dato8 = Buffram(tmptx)
       Dato16 = Makeint(datocol , Dato8)
-      'Shiftout Sdi , Clk , Datocol , 1
-      'Shiftout Sdi , Clk , Dato8 , 1
       Shiftout Sdi , Clk , Dato16 , 1
+      Incr Ptrcol
    Next
 
    Set Lena
@@ -170,13 +165,9 @@ Print #1 , Version(3)
 Estado_led = 1
 Print #1 , "Nummatriz=" ; Nummatriz
 Print #1 , "Longbuf=" ; Longbuf
-Print #1 , "Longdat=" ; Longdat
-Print #1 , "Longdat_mas_uno=" ; Longdat_mas_uno
-Print #1 , "Longbuf_mas_uno=" ; Longbuf_mas_uno
-Print #1 , "Numtxser=" ; Numtxser
 
 For Tmpb = 1 To Longbuf
-   Buffram(tmpb) = &H55
+   Buffram(tmpb) = Tmpb
 
 Next
 
@@ -218,15 +209,49 @@ Sub Procser()
                   Cmderr = 0
                   Atsnd = "Se configura setled a " + Str(tmpb)
                   Estado_led = Tmpb
-
                Else
                   Cmderr = 5
                End If
 
             Else
                Cmderr = 4
-
             End If
+
+         Case "SETBUF"
+            If Numpar = 3 Then
+               Tmpb = Val(cmdsplit(2))
+               If Tmpb > 0 And Tmpb < Longbuf_masuno Then
+                  Cmderr = 0
+                  Buffram(tmpb) = Hexval(cmdsplit(3))
+                  Atsnd = "Se configuro Buffram(" + Str(tmpb) + ") a" + Hex(buffram(tmpb))
+               Else
+                  Cmderr = 4
+               End If
+            Else
+               Cmderr = 5
+            End If
+
+         Case "LEEBUF"
+            If Numpar = 1 Then
+               Cmderr = 0
+               For Tmpb = 1 To Longbuf
+                  Print #1 , Tmpb ; "," ; Hex(buffram(tmpb))
+               Next
+               Atsnd = "Buffram"
+            Elseif Numpar = 2 Then
+                  Cmderr = 0
+                  Tmpb = Val(cmdsplit(2))
+                  If Tmpb > 0 And Tmpb < Longbuf_masuno Then
+                     Cmderr = 0
+                     Buffram(tmpb) = Hexval(cmdsplit(3))
+                     Atsnd = "Se configuro Buffram(" + Str(tmpb) + ") a" + Hex(buffram(tmpb))
+                  Else
+                     Cmderr = 4
+                  End If
+            Else
+               Cmderr = 5
+            End If
+
 
          Case Else
             Cmderr = 1
@@ -295,57 +320,59 @@ Data &B11111111111111000000000000001100&                    'Estado 15
 Data &B11111111111111111111111111110000&                    'Estado 16
 
 
-'Tbl_txser:
+Tbl_ptrcol:
+Data 0                                                      'DUMMY
 Data 0
-Data 188
-Data 184
-Data 180
-Data 176
-Data 172
-Data 168
-Data 164
-Data 160
-Data 156
-Data 152
-Data 148
-Data 144
-Data 140
-Data 136
-Data 132
-Data 128
-Tbl_txser:
-Data 124
-Data 120
-Data 116
-Data 112
-Data 108
-Data 104
-Data 100
-Data 96
-Data 92
-Data 88
-Data 84
-Data 80
-Data 76
-Data 72
-Data 68
-Data 64
-Data 60
-Data 56
-Data 52
-Data 48
-Data 44
-Data 40
-Data 36
-Data 32
-Data 28
-Data 24
+Data 5
+Data 10
+Data 15
 Data 20
-Data 16
-Data 12
-Data 8
+Data 25
+Data 30
+Data 35
+
+Tbl_poscol:
+'Data 0
+Data 1                                                      '0
+Data 9                                                      '1
+Data 17                                                     '2
+Data 25                                                     '3
+Data 33                                                     '4
+Data 2                                                      '6                                                      '5
+Data 10
+Data 18
+Data 26
+Data 34
+Data 3
+Data 11
+Data 19
+Data 27
+Data 35
 Data 4
-Data 0
+Data 12
+Data 20
+Data 28
+Data 36
+Data 5
+Data 13
+Data 21
+Data 29
+Data 37
+Data 6
+Data 14
+Data 22
+Data 30
+Data 38
+Data 7
+Data 15
+Data 23
+Data 31
+Data 39
+Data 8
+Data 16
+Data 24
+Data 32
+Data 40
 
 
 Loaded_arch:

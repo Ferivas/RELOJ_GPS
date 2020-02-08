@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 41
+$version 0 , 1 , 53
 $regfile = "m1284pdef.dat"
 $crystal = 18432000
 $baud = 9600
@@ -17,19 +17,13 @@ $baud = 9600
 $hwstack = 120
 $swstack = 120
 $framesize = 120
-$projecttime = 33
+$projecttime = 36
 
 
 'Declaracion de constantes
-Const Nummatriz = 2                                         'Una matriz esunmodulo P10 de 16x32
-Const Longbuf = Nummatriz * 64
-Const Longdat = Nummatriz * 32
-Const Longdat_mas_uno = Longdat + 1
-Const Longbuf_mas_uno = Longbuf + 1
-Const Numtxser = Longbuf / 4
-Const Numtxser_2 = Numtxser / 2
-
-
+Const Nummatriz = 5                                         'Una matriz esunmodulo P10 de 16x32
+Const Longbuf = Nummatriz * 8
+Const Longbuf_masuno = Longbuf + 1
 
 'Configuracion de entradas/salidas
 Led1 Alias Portd.5                                          'LED ROJO
