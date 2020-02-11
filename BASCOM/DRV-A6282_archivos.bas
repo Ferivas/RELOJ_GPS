@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 131
+$projecttime = 139
 
 
 '*******************************************************************************
@@ -133,23 +133,28 @@ Int_timer2:                                                 ' Ints a 1000 Hz si
    Datocol = Lookup(cntr_col , Tbl_col)
 
    Dato8 = Buffram(cntr_col)
-   Dato16 = Makeint(dato8 , Datocol)
+   'Dato16 = Makeint(dato8 , Datocol)
+   Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 8)
-   Dato16 = Makeint(dato8 , Datocol)
+   'Dato16 = Makeint(dato8 , Datocol)
+   Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 16)
-   Dato16 = Makeint(dato8 , Datocol)
+   'Dato16 = Makeint(dato8 , Datocol)
+   Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 24)
-   Dato16 = Makeint(dato8 , Datocol)
+   'Dato16 = Makeint(dato8 , Datocol)
+   Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 32)
-   Dato16 = Makeint(dato8 , Datocol)
+   'Dato16 = Makeint(dato8 , Datocol)
+   Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Set Lena
@@ -315,14 +320,15 @@ Data "ERROR SD. Intente de nuevo"                           '9
 
 Tbl_col:
 Data &B00000000                                             'Dummy para usar tabla desde pos 1
-Data &B00000001
-Data &B00000010
-Data &B00000100
-Data &B00001000
-Data &B00010000
-Data &B00100000
-Data &B01000000
 Data &B10000000
+Data &B01000000
+Data &B00100000
+Data &B00010000
+Data &B00001000
+Data &B00000100
+Data &B00000010
+Data &B00000001
+
 
 Tabla_estado:
 Data &B00000000000000000000000000000000&                    'Estado 0

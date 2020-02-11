@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 73
+$version 0 , 1 , 76
 $regfile = "m1284pdef.dat"
 $crystal = 18432000
 $baud = 9600
