@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 139
+$projecttime = 229
 
 
 '*******************************************************************************
@@ -16,17 +16,21 @@ $projecttime = 139
 '*******************************************************************************
 Declare Sub Inivar()
 Declare Sub Procser()
+Declare Sub Gendig(byval Valdig As Byte , Byval Posdig As Byte)
+Declare Sub Gendigp(byval Valdig As Byte , Byval Posdig As Byte)
 
 
 '*******************************************************************************
 'Declaracion de variables
 '*******************************************************************************
 Dim Tmpb As Byte
+Dim Tmpb2 As Byte
+Dim Tmpl2 As Long
 
 Dim Cmdtmp As String * 6
 Dim Atsnd As String * 200
 Dim Cmderr As Byte
-'Dim Tmpstr8 As String * 16
+Dim Tmpstr8 As String * 16
 Dim Tmpstr52 As String * 52
 
 
@@ -39,7 +43,10 @@ Dim Buffram(longbuf) As Byte
 Dim Cntr_col As Byte
 'Dim Kk As Byte
 'Dim Ptrcol As Byte
-
+Dim Ptrdig As Byte
+Dim Ptrpos As Byte
+Dim Tmptime As String * 10
+Dim Tmpstr As String * 2
 
 'Variables TIMER0
 Dim T0c As Byte
@@ -47,6 +54,14 @@ Dim Num_ventana As Byte
 Dim Estado As Long
 Dim Estado_led As Byte
 Dim Iluminar As Bit
+
+'TIMER1
+Dim Tmpltime As Long
+Dim Tmpsec As String * 10
+Dim Newseg As Bit
+
+Dim Horamin As Long
+Dim Horamineep As Eram Long
 
 'TIMER 2
 
@@ -122,6 +137,27 @@ Int_timer0:
 Return
 
 
+Int_timer1:
+   Timer1 = &HB9B0
+   Tmpltime = Syssec()
+   Incr Tmpltime
+   Tmpsec = Time(tmpltime)
+   Time$ = Tmpsec
+   Tmpsec = Date(tmpltime)
+   Date$ = Tmpsec
+   Set Newseg
+Return
+
+
+Settime:
+Return
+
+Getdatetime:
+Return
+
+Setdate:
+Return
+
 
 '*******************************************************************************
 ' TIMER0
@@ -132,28 +168,33 @@ Int_timer2:                                                 ' Ints a 1000 Hz si
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
 
+   Dato8 = 0
+   Dato16 = Makeint(datocol , Dato8)
+   Shiftout Sdi , Clk , Dato16 , Opcion
+   Shiftout Sdi , Clk , Dato16 , Opcion
+   Shiftout Sdi , Clk , Dato16 , Opcion
+   Shiftout Sdi , Clk , Dato16 , Opcion
+   Shiftout Sdi , Clk , Dato16 , Opcion
+   Set Lena
+   Reset Lena
+
    Dato8 = Buffram(cntr_col)
-   'Dato16 = Makeint(dato8 , Datocol)
    Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 8)
-   'Dato16 = Makeint(dato8 , Datocol)
    Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 16)
-   'Dato16 = Makeint(dato8 , Datocol)
    Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 24)
-   'Dato16 = Makeint(dato8 , Datocol)
    Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
    Dato8 = Buffram(cntr_col + 32)
-   'Dato16 = Makeint(dato8 , Datocol)
    Dato16 = Makeint(datocol , Dato8)
    Shiftout Sdi , Clk , Dato16 , Opcion
 
@@ -179,23 +220,89 @@ Return
 ' Inicialización de variables
 '*******************************************************************************
 Sub Inivar()
-Reset Led1
-Print #1 , "************ MAINSERLED M8 ************"
-Print #1 , Version(1)
-Print #1 , Version(2)
-Print #1 , Version(3)
-Estado_led = 1
-Print #1 , "Nummatriz=" ; Nummatriz
-Print #1 , "Longbuf=" ; Longbuf
+   Reset Led1
+   Print #1 , "************ MAINSERLED M8 ************"
+   Print #1 , Version(1)
+   Print #1 , Version(2)
+   Print #1 , Version(3)
+   Estado_led = 1
+   Print #1 , "Nummatriz=" ; Nummatriz
+   Print #1 , "Longbuf=" ; Longbuf
 
-For Tmpb = 1 To Longbuf
-   Buffram(tmpb) = Tmpb
+   For Tmpb = 1 To Longbuf
+      Buffram(tmpb) = 0
+   Next
 
-Next
+'   For Tmpb = 0 To 3
+'       Call Gendig(tmpb , Tmpb)
+'   Next
 
+   Horamin = Horamineep
+   Print #1 , "Last act CLK " ; Date(horamin) ; "," ; Time(horamin)
+   'Tmplntp = Syssec(horamin)
+   Tmpstr8 = Time(horamin)
+   Time$ = Tmpstr8
+   Print #1 , "Ts:" ; Tmpstr8 ; " T:" ; Time$
+   Tmpstr8 = Date(horamin)
+   Date$ = Tmpstr8
+   Print #1 , "Ds:" ; Tmpstr8 ; " D:" ; Date$
+   Print #1 , "H:" ; Time$ ; " D:" ; Date$
 
 End Sub
 
+
+'*******************************************************************************
+' Genera digitos 6x8 en posicion determinada
+'*******************************************************************************
+
+
+Sub Gendig(byval Valdig As Byte , Byval Posdig As Byte)
+   Local Kt As Byte
+   Local Ptr As Byte
+   Local Tmpb22 As Byte
+   Local Tmpw2 As Word
+   Ptrdig = Valdig * 6
+   'Posdig = Posdig - 1
+   Ptrpos = Lookup(posdig , Tbl_posdig)
+   'Print #1 , "Ptrpos=" ; Ptrpos
+
+   For Kt = 0 To 5
+'      K = Kt - 1
+      Tmpw2 = Ptrdig + Kt
+      Tmpb22 = Lookup(tmpw2 , Tbl_dig)
+      Ptr = Ptrpos + Kt
+      Buffram(ptr) = Tmpb22
+      'Print #1 , "B(" ; Ptr ; ")=" ; Bin(tmpb22)
+   Next
+
+End Sub
+
+
+'*******************************************************************************
+' Genera digitos 4x6 en posicion determinada
+'*******************************************************************************
+
+
+Sub Gendigp(byval Valdig As Byte , Byval Posdig As Byte)
+   Local Kt As Byte
+   Local Ptr As Byte
+   Local Tmpb22 As Byte
+   Local Tmpw2 As Word
+   Ptrdig = Valdig * 4
+   'Posdig = Posdig - 1
+   Ptrpos = Lookup(posdig , Tbl_posdigp)
+   'Print #1 , "Ptrpos=" ; Ptrpos
+
+   For Kt = 0 To 3
+'      K = Kt - 1
+      Tmpw2 = Ptrdig + Kt
+      Tmpb22 = Lookup(tmpw2 , Tbl_digp)
+      Ptr = Ptrpos + Kt
+      Buffram(ptr) = Tmpb22
+      'Print #1 , "B(" ; Ptr ; ")=" ; Bin(tmpb22)
+   Next
+
+End Sub
 
 '*******************************************************************************
 ' Procesamiento de comandos
@@ -261,15 +368,16 @@ Sub Procser()
                Next
                Atsnd = "Buffram"
             Elseif Numpar = 2 Then
+               Cmderr = 0
+               Tmpb = Val(cmdsplit(2))
+               If Tmpb > 0 And Tmpb < Longbuf_masuno Then
                   Cmderr = 0
-                  Tmpb = Val(cmdsplit(2))
-                  If Tmpb > 0 And Tmpb < Longbuf_masuno Then
-                     Cmderr = 0
-                     Buffram(tmpb) = Hexval(cmdsplit(3))
-                     Atsnd = "Se configuro Buffram(" + Str(tmpb) + ") a" + Hex(buffram(tmpb))
-                  Else
-                     Cmderr = 4
-                  End If
+                  Buffram(tmpb) = Hexval(cmdsplit(3))
+                  Atsnd = "Se configuro Buffram(" + Str(tmpb) + ") a" + Hex(buffram(tmpb))
+                  Call Gendig(tmpb , Tmpb2)
+               Else
+                  Cmderr = 4
+               End If
             Else
                Cmderr = 5
             End If
@@ -277,18 +385,97 @@ Sub Procser()
          Case "SETCER"
             Cmderr = 0
             Atsnd = "Buffram a cero"
-               For Tmpb = 1 To Longbuf
-                  Buffram(tmpb) = 0
-               Next
+            For Tmpb = 1 To Longbuf
+               Buffram(tmpb) = 0
+            Next
+
+         case "SETDIG"
+            If Numpar = 3 Then
+               tmpb=val(cmdsplit(2))
+               if tmpb<11 then
+                  tmpb2=val(cmdsplit(3))
+                  If Tmpb2 < 5 Then
+                     cmderr=0
+                     atsnd="Set digito "+str(tmpb)+ "en pos "+str(tmpb2)
+                     Call Gendig(tmpb , Tmpb2)
+                  Else
+                    Cmderr = 6
+                  End If
+               Else
+                  Cmderr = 4
+               End If
+            Else
+               Cmderr = 5
+            End If
+
+         Case "SETDIP"
+            If Numpar = 3 Then
+               tmpb=val(cmdsplit(2))
+               if tmpb<11 then
+                  tmpb2=val(cmdsplit(3))
+                  If Tmpb2 < 2 Then
+                     cmderr=0
+                     Atsnd = "Set digito p " + Str(tmpb) + "en pos " + Str(tmpb2)
+                     Call Gendigp(tmpb , Tmpb2)
+                  Else
+                    Cmderr = 6
+                  End If
+               Else
+                  Cmderr = 4
+               End If
+            Else
+               Cmderr = 5
+            End If
+
+            Case "SETCLK"
+               If Numpar = 2 Then
+                  Cmderr = 0
+                  Tmpstr52 = Cmdsplit(2)
+                  If Len(tmpstr52) = 12 Then
+                     Tmpstr8 = Mid(tmpstr52 , 7 , 2) + "/" + Mid(tmpstr52 , 9 , 2) + "/" + Mid(tmpstr52 , 11 , 2)
+                     'Print #1 , Tmpstr8
+                     Time$ = Tmpstr8
+                     'Print #1 , "T>" ; Time$
+                     Tmpstr8 = Mid(tmpstr52 , 1 , 2) + ":" + Mid(tmpstr52 , 3 , 2) + ":" + Mid(tmpstr52 , 5 , 2)
+                     'Print #1 , Tmpstr8
+                     Date$ = Tmpstr8
+                     'Print #1 , "D>" ; Date$
+                     Tmpstr8 = ""
+                     Atsnd = "WATCHING INFORMA. Se configuro reloj en " + Date$ + " a " + Time$
+                     'Set Actclkok
+                     Tmpl2 = Syssec()
+                     Horamin = Tmpl2
+                     Horamineep = Horamin
+                  Else
+                     Cmderr = 1
+                  End If
+               Else
+                  Cmderr = 5
+               End If
 
 
-         Case Else
-            Cmderr = 1
+            Case "LEECLK"
+               Cmderr = 0
+               Tmpstr52 = Date(horamin)
+               Atsnd = "Ultima ACT CLK en " + Tmpstr52 + " a "       '+ Time(horamin)
+               Tmpstr52 = Time(horamin)
+               Atsnd = Atsnd + Tmpstr52
 
-      End Select
+            Case "SISCLK"
+               Cmderr = 0
+               Tmpstr52 = Date$
+               Atsnd = "Hora actual " + Tmpstr52 + " a "  '+ Time(horamin)
+               Tmpstr52 = Time$
+               Atsnd = Atsnd + Tmpstr52
 
+
+
+      Case Else
+      Cmderr = 1
+
+         End Select
    Else
-        Cmderr = 2
+       Cmderr = 2
    End If
 
    If Cmderr > 0 Then
@@ -306,49 +493,216 @@ End Sub
 '*******************************************************************************
 
 Tbl_err:
-Data "OK"                                                   '0
-Data "Comando no reconocido"                                '1
-Data "Longitud comando no valida"                           '2
-Data "Numero de usuario no valido"                          '3
-Data "Numero de parametros invalido"                        '4
-Data "Error longitud parametro 1"                           '5
-Data "Error longitud parametro 2"                           '6
-Data "Parametro no valido"                                  '7
-Data "ERROR8"                                               '8
-Data "ERROR SD. Intente de nuevo"                           '9
+   Data "OK"                                                   '0
+   Data "Comando no reconocido"                                '1
+   Data "Longitud comando no valida"                           '2
+   Data "Numero de usuario no valido"                          '3
+   Data "Numero de parametros invalido"                        '4
+   Data "Error longitud parametro 1"                           '5
+   Data "Error longitud parametro 2"                           '6
+   Data "Parametro no valido"                                  '7
+   Data "ERROR8"                                               '8
+   Data "ERROR SD. Intente de nuevo"                           '9
+
 
 
 Tbl_col:
-Data &B00000000                                             'Dummy para usar tabla desde pos 1
-Data &B10000000
-Data &B01000000
-Data &B00100000
-Data &B00010000
-Data &B00001000
-Data &B00000100
-Data &B00000010
-Data &B00000001
+   Data &B00000000                                             'Dummy para usar tabla desde pos 1
+   Data &B10000000
+   Data &B01000000
+   Data &B00100000
+   Data &B00010000
+   Data &B00001000
+   Data &B00000100
+   Data &B00000010
+   Data &B00000001
 
 
 Tabla_estado:
-Data &B00000000000000000000000000000000&                    'Estado 0
-Data &B00000000000000000000000000000011&                    'Estado 1
-Data &B00000000000000000000000000110011&                    'Estado 2
-Data &B00000000000000000000001100110011&                    'Estado 3
-Data &B00000000000000000011001100110011&                    'Estado 4
-Data &B00000000000000110011001100110011&                    'Estado 5
-Data &B00000000000011001100000000110011&                    'Estado 6
-Data &B00001111111111110000111111111111&                    'Estado 7
-Data &B01010101010101010101010101010101&                    'Estado 8
-Data &B00110011001100110011001100110011&                    'Estado 9
-Data &B01110111011101110111011101110111&                    'Estado 10
-Data &B11111111111111000000000000001100&                    'Estado 11
-Data &B11111111111111000000000011001100&                    'Estado 12
-Data &B11111111111111000000110011001100&                    'Estado 13
-Data &B11111111111111001100110011001100&                    'Estado 14
-Data &B11111111111111000000000000001100&                    'Estado 15
-Data &B11111111111111111111111111110000&                    'Estado 16
+   Data &B00000000000000000000000000000000&                    'Estado 0
+   Data &B00000000000000000000000000000011&                    'Estado 1
+   Data &B00000000000000000000000000110011&                    'Estado 2
+   Data &B00000000000000000000001100110011&                    'Estado 3
+   Data &B00000000000000000011001100110011&                    'Estado 4
+   Data &B00000000000000110011001100110011&                    'Estado 5
+   Data &B00000000000011001100000000110011&                    'Estado 6
+   Data &B00001111111111110000111111111111&                    'Estado 7
+   Data &B01010101010101010101010101010101&                    'Estado 8
+   Data &B00110011001100110011001100110011&                    'Estado 9
+   Data &B01110111011101110111011101110111&                    'Estado 10
+   Data &B11111111111111000000000000001100&                    'Estado 11
+   Data &B11111111111111000000000011001100&                    'Estado 12
+   Data &B11111111111111000000110011001100&                    'Estado 13
+   Data &B11111111111111001100110011001100&                    'Estado 14
+   Data &B11111111111111000000000000001100&                    'Estado 15
+   Data &B11111111111111111111111111110000&                    'Estado 16
 
 
+Tbl_posdig:
+Data 1
+Data 8
+Data 17
+Data 24
+Data 25
+Data 31
+
+Tbl_posdigp:
+Data 32
+Data 37
+Data 17
+
+
+Tbl_dig:
+Data &B01111110                                             '0
+Data &B11111111
+Data &B10000001
+Data &B10000001
+Data &B11111111
+Data &B01111110
+
+
+Data &B00100001                                             '1
+Data &B01000001
+Data &B11111111
+Data &B11111111
+Data &B00000001
+Data &B00000001
+
+
+Data &B10001111                                             '2
+Data &B10011111
+Data &B10010001
+Data &B10010001
+Data &B11110001
+Data &B01100001
+
+
+Data &B10000001                                             '3
+Data &B10010001
+Data &B10010001
+Data &B10010001
+Data &B11111111
+Data &B01101110
+
+
+Data &B11110000                                             '4
+Data &B11111000
+Data &B00001000
+Data &B00001000
+Data &B11111111
+Data &B11111111
+
+
+Data &B11110001                                             '5
+Data &B11110001
+Data &B10010001
+Data &B10010001
+Data &B10011111
+Data &B10001110
+
+
+Data &B01111110                                             '6
+Data &B11111111
+Data &B10010001
+Data &B10010001
+Data &B10011111
+Data &B00001110
+
+
+Data &B10000111                                             '7
+Data &B10001111
+Data &B10011000
+Data &B10110000
+Data &B11100000
+Data &B11000000
+
+Data &B01101110                                             '8
+Data &B11111111
+Data &B10010001
+Data &B10010001
+Data &B11111111
+Data &B01101110
+
+
+Data &B01100000                                             '9
+Data &B11110001
+Data &B10010001
+Data &B10010001
+Data &B11111111
+Data &B01111110
+
+
+Data &B00000000
+Data &B00000000
+Data &B00000000
+Data &B00000000
+Data &B00000000
+Data &B00000000
+
+Tbl_digp:
+Data &B00011110                                             '0
+Data &B00100001
+Data &B00100001
+Data &B00011110
+
+
+Data &B00000000                                             '1
+Data &B00010001
+Data &B00111111
+Data &B00000001
+
+
+Data &B00100111                                             '2
+Data &B00101001
+Data &B00101001
+Data &B00010001
+
+
+Data &B00100001                                             '3
+Data &B00101001
+Data &B00101001
+Data &B00010110
+
+
+Data &B00111000                                             '4
+Data &B00000100
+Data &B00000100
+Data &B00111111
+
+
+Data &B00111001                                             '5
+Data &B00101001
+Data &B00101001
+Data &B00100110
+
+
+Data &B00011110                                             '6
+Data &B00101001
+Data &B00101001
+Data &B00000110
+
+
+Data        &B00100011
+Data        &B00100100
+Data        &B00101000
+Data &B00110000
+
+
+Data        &B00010110
+Data        &B00101001
+Data        &B00101001
+Data        &B00010110
+
+
+Data        &B00011000
+Data        &B00100101
+Data        &B00100101
+Data        &B00011110
+
+
+Data        &B00000000
+Data        &B00000000
+Data &B00000000
+Data &B00000000
 
 Loaded_arch:
