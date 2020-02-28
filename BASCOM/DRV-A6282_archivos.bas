@@ -561,12 +561,12 @@ Data &B11111111
 Data &B01111110
 
 
-Data &B00100001                                             '1
+Data &B00100000                                             '1
 Data &B01000001
 Data &B11111111
 Data &B11111111
 Data &B00000001
-Data &B00000001
+Data &B00000000
 
 
 Data &B10001111                                             '2

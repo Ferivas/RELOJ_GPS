@@ -8,8 +8,8 @@
 '
 
 
-$version 0 , 1 , 113
-$regfile = "m1284pdef.dat"
+$version 0 , 1 , 119
+$regfile = "m328pbdef.dat"
 $crystal = 18432000
 $baud = 9600
 
@@ -17,7 +17,7 @@ $baud = 9600
 $hwstack = 120
 $swstack = 120
 $framesize = 120
-$projecttime = 58
+$projecttime = 65
 
 
 'Declaracion de constantes
@@ -32,18 +32,18 @@ Const Lsb_h = 3
 Const Opcion = Lsb_h
 
 'Configuracion de entradas/salidas
-Led1 Alias Portd.5                                          'LED ROJO
+Led1 Alias Portc.4                                          'LED ROJO
 Config Led1 = Output
 
 'PINES interfaz
-Clk Alias Portc.4
+Clk Alias Portc.3
 Config Clk = Output
-Lena Alias Portc.3
+Lena Alias Portc.0
 Config Lena = Output
-Oena Alias Porta.5
+Oena Alias Portc.1
 Config Oena = Output
-Sdi Alias Portc.5
-Config Oena = Output
+Sdi Alias Portc.2
+Config sdi = Output
 
 Set Clk
 Reset Lena
@@ -52,19 +52,19 @@ Reset Sdi
 
 'Configuración de Interrupciones
 'TIMER0
-Config Timer0 = Timer , Prescale = 1024                     'Ints a 100Hz si Timer0=184
+Config Timer0 = Timer , Prescale = 1024                     'Ints a 100Hz
 On Timer0 Int_timer0
 Enable Timer0
 Start Timer0
 
 'TIMER1
-Config Timer1 = Timer , Prescale = 1024                     'Ints a 100Hz si Timer0=184
+Config Timer1 = Timer , Prescale = 1024                     'Ints a 1 Hz
 On Timer1 Int_timer1
 Enable Timer1
 Start Timer1
 
 'TIMER2
-Config Timer2 = Timer , Prescale = 128                      'Ints a 100Hz si Timer0=184
+Config Timer2 = Timer , Prescale = 128                      'Ints a 1000Hz
 On Timer2 Int_timer2
 Enable Timer2
 Start Timer2
