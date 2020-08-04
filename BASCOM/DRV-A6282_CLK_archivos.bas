@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 255
+$projecttime = 248
 
 
 '*******************************************************************************
@@ -18,7 +18,12 @@ Declare Sub Inivar()
 Declare Sub Procser()
 Declare Sub Gendig(byval Valdig As Byte , Byval Posdig As Byte)
 Declare Sub Gendigp(byval Valdig As Byte , Byval Posdig As Byte)
-
+'RTC
+Declare Sub Getdatetimeds3231()
+Declare Sub Error(byval Genre As Byte)
+Declare Sub Setdateds3231()
+Declare Sub Settimeds3231()
+Declare Sub Leer_rtc()
 
 
 '*******************************************************************************
@@ -49,7 +54,12 @@ Dim Ptrpos As Byte
 Dim Tmptime As String * 10
 Dim Tmpstr As String * 2
 
-
+'RTC
+Dim Dow As Byte
+Dim Actclk As Bit
+Dim Newactclk As Bit
+Dim Cntrseg As Byte
+Dim Topseg As Word
 
 'Variables TIMER0
 Dim T0c As Byte
@@ -66,6 +76,7 @@ Dim Newseg As Bit
 Dim Horamin As Long
 Dim Horamineep As Eram Long
 
+Dim Topsegeep As Eram Word
 'TIMER 2
 
 'Variables SERIAL0
@@ -91,8 +102,8 @@ Goto Loaded_arch
 ' Subrutina interrupcion de puerto serial 1
 '*******************************************************************************
 At_ser1:
-'   disable timer2
    Serrx = Udr
+
    Select Case Serrx
       Case "$":
          Ser_ini = 1
@@ -112,7 +123,7 @@ At_ser1:
          End If
 
    End Select
-'   enable timer2
+
 Return
 
 
@@ -125,9 +136,9 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer0:
-   Timer0 = &H6A                                            '480 Hz con 18.432MHz
+   Timer0 = &H4C                                            '100 Hz con 18.432MHz
    Incr T0c
-   T0c = T0c Mod 48
+   T0c = T0c Mod 8
    If T0c = 0 Then
       Num_ventana = Num_ventana Mod 32
       Estado = Lookup(estado_led , Tabla_estado)
@@ -136,50 +147,6 @@ Int_timer0:
       Led1 = Iluminar
       Incr Num_ventana
    End If
-
-   Set Oena                                                 ' Apago driver
-   Incr Cntr_col
-   Datocol = Lookup(cntr_col , Tbl_col)
-
-   Dato8 = 0
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-   Shiftout Sdi , Clk , Dato16 , Opcion
-   Shiftout Sdi , Clk , Dato16 , Opcion
-   Shiftout Sdi , Clk , Dato16 , Opcion
-   Shiftout Sdi , Clk , Dato16 , Opcion
-   Set Lena
-   Reset Lena
-
-   Dato8 = Buffram(cntr_col)
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-
-   Dato8 = Buffram(cntr_col + 8)
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-
-   Dato8 = Buffram(cntr_col + 16)
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-
-   Dato8 = Buffram(cntr_col + 24)
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-
-   Dato8 = Buffram(cntr_col + 32)
-   Dato16 = Makeint(datocol , Dato8)
-   Shiftout Sdi , Clk , Dato16 , Opcion
-
-   Set Lena
-   Reset Lena
-   Cntr_col = Cntr_col Mod 8
-   nop
-   nop
-   nop
-   nop
-   nop
-   Reset Oena
 
 Return
 
@@ -193,6 +160,12 @@ Int_timer1:
    Tmpsec = Date(tmpltime)
    Date$ = Tmpsec
    Set Newseg
+   Incr Cntrseg
+   Cntrseg = Cntrseg Mod Topseg
+   If Cntrseg = 0 Then
+      Set Newactclk
+
+   End If
 Return
 
 
@@ -209,8 +182,8 @@ Return
 '*******************************************************************************
 ' TIMER0
 '*******************************************************************************
-Int_timer2:                                                 ' Ints a 800 Hz si
-   Timer2 = &H10
+Int_timer2:                                                 ' Ints a 480 Hz si timer2=&h6a
+   Timer2 = &H6A
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
@@ -294,6 +267,9 @@ Sub Inivar()
    Date$ = Tmpstr8
    Print #1 , "Ds:" ; Tmpstr8 ; " D:" ; Date$
    Print #1 , "H:" ; Time$ ; " D:" ; Date$
+
+   Topseg = Topsegeep
+   Print #1 , "Topseg=" ; Topseg
 
 End Sub
 
@@ -490,9 +466,17 @@ Sub Procser()
                      Tmpstr8 = ""
                      Atsnd = "WATCHING INFORMA. Se configuro reloj en " + Date$ + " a " + Time$
                      'Set Actclkok
-                     Tmpl2 = Syssec()
-                     Horamin = Tmpl2
+                     Dow = Dayofweek()
+                     Call Setdateds3231()
+                     Call Settimeds3231()
+                     Call Getdatetimeds3231()
+                     Horamin = Syssec()
                      Horamineep = Horamin
+                     Set Actclk
+
+'                     Tmpl2 = Syssec()
+'                     Horamin = Tmpl2
+'                     Horamineep = Horamin
                   Else
                      Cmderr = 1
                   End If
@@ -515,7 +499,25 @@ Sub Procser()
                Tmpstr52 = Time$
                Atsnd = Atsnd + Tmpstr52
 
+            Case "ACTCLK"
+               Cmderr = 0
+               Atsnd = "Nueva act CLK"
+               'set topsegeep
+               Set Newactclk
 
+            Case "SETTOP"
+               If Numpar = 2 Then
+                  Cmderr = 0
+                  Topseg = Val(cmdsplit(2))
+                  Topsegeep = Topseg
+                  Atsnd = "Se config Topseg=" + Str(topseg)
+               Else
+                  Cmderr = 4
+               End If
+
+            Case "LEETOP"
+               Cmderr = 0
+               Atsnd = "Topseg=" + Str(topseg)
 
       Case Else
       Cmderr = 1
@@ -534,6 +536,138 @@ Sub Procser()
 End Sub
 
 
+'*****************************************************************************
+'---------routines I2C for  RTC DS3231----------------------------------------
+
+'*****************************************************************************
+Sub Getdatetimeds3231()
+  I2cstart                                                  ' Generate start code
+  If Err = 0 Then
+     I2cwbyte Ds3231w                                       ' send address
+     I2cwbyte 0                                             ' start address in 1307
+     I2cstart                                               ' Generate start code
+     If Err = 0 Then
+        I2cwbyte Ds3231r                                    ' send address
+        I2crbyte _sec , Ack
+        I2crbyte _min , Ack       ' MINUTES
+        I2crbyte _hour , Ack       ' Hours
+        I2crbyte Dow , Ack                                        ' Day of Week
+        I2crbyte _day , Ack                                       ' Day of Month
+        I2crbyte _month , Ack       ' Month of Year
+        I2crbyte _year , Nack       ' Year
+        I2cstop
+        If Err <> 0 Then
+         Call Error(15)
+        Else
+           _sec = Makedec(_sec) : _min = Makedec(_min) : _hour = Makedec(_hour)
+           _day = Makedec(_day) : _month = Makedec(_month) : _year = Makedec(_year)
+        End If
+     Else
+      Print #1 , "No se encontro DS3231 en Getdatetime 2"
+     End If
+  Else
+   Print #1 , "No se encontro DS3231 en Getdatetime 1"
+  End If
+End Sub
+'-----------------------
+Sub Setdateds3231()
+  I2cstart                                                  ' Generate start code
+  If Err = 0 Then
+     _day = Makebcd(_day) : _month = Makebcd(_month) : _year = Makebcd(_year)
+     I2cwbyte Ds3231w                                       ' send address
+     I2cwbyte 3                                                ' starting address in 1307
+     I2cwbyte Dow
+     I2cwbyte _day                                             ' Send Data to day
+     I2cwbyte _month       ' Month
+     I2cwbyte _year       ' Year
+     I2cstop
+     If Err <> 0 Then call Error(15)
+  Else
+   Print #1 , "No se encontro DS3231 en Setdate"
+  End If
+end sub
+'-----------------------
+Sub Settimeds3231()
+  I2cstart                                                  ' Generate start code
+  If Err = 0 Then
+     _sec = Makebcd(_sec) : _min = Makebcd(_min) : _hour = Makebcd(_hour)
+     I2cwbyte Ds3231w                                       ' send address
+     I2cwbyte 0                                                ' starting address in 1307
+     I2cwbyte _sec                                             ' Send Data to SECONDS
+     I2cwbyte _min                                             ' MINUTES
+     I2cwbyte _hour                                         ' Hours
+     I2cstop
+     If Err <> 0 Then call Error(15)
+  Else
+   Print #1 , "No se encontro DS3231 en Settime"
+  End If
+ end sub
+ '----------------------
+
+ '********définition des erreurs***********************************************
+Sub Error(byval genre As Byte )
+Local Mes_error As String * 20
+Select Case Genre
+   Case 1
+   Mes_error = " Reset  "
+   Case 2
+   Mes_error = " DFH "
+   Case 3
+   Mes_error = "set params  "
+   Case 4
+   Mes_error = "start "
+  Case 5
+   Mes_error = "Hardstop "
+   Case 6
+   Mes_error = "Status "
+   Case 7
+   Mes_error = "Getposition "
+   Case 8
+   Mes_error = "pas de module"
+   Case 9
+   Mes_error = "9xx"
+   Case 10
+   Mes_error = "10xx"
+   Case 11
+   Mes_error = "11xx"
+   Case 12
+   Mes_error = "12xx"
+   Case 13
+   Mes_error = "13xx"
+   Case 14
+   Mes_error = "ecriture clock"
+   Case 15
+   Mes_error = "lecture clock"
+   Case Else
+    Mes_error = "Autre erreur"
+End Select
+'Cls
+Print #1 , "error=" ; Mes_error                             '; Adr_ax
+'If Strerr <> "" Then
+'   Locate 2 , 1 : Lcd Strerr
+'End If
+'Stop
+
+End Sub
+
+
+Sub Leer_rtc()
+   Tmpb = 0
+   Tmpb2 = 0
+   Do
+      Incr Tmpb
+      Print #1 , "Leo RTC " ; Tmpb
+      Call Getdatetimeds3231()
+      If Err = 0 Then
+         Print #1 , "RTC H=" ; Time$ ; ",F=" ; Date$
+         Tmpb2 = 1
+      Else
+         I2cinit
+      End If
+      Wait 1
+
+   Loop Until Tmpb = 10 Or Tmpb2 = 1
+End Sub
 
 '*******************************************************************************
 'TABLA DE DATOS

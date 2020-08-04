@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 147
+$version 0 , 1 , 140
 $regfile = "m328pbdef.dat"
 $crystal = 18432000
 $baud = 9600
@@ -17,7 +17,7 @@ $baud = 9600
 $hwstack = 152
 $swstack = 152
 $framesize = 152
-$projecttime = 86
+$projecttime = 91
 
 
 'Declaracion de constantes
@@ -31,6 +31,9 @@ Const Lsb_h = 3
 
 Const Opcion = Lsb_h
 
+'RTC
+Const Ds3231r = &B11010001                                  'DS3231 is very similar to DS1307 but it include a precise crystal
+Const Ds3231w = &B11010000
 
 'Configuracion de entradas/salidas
 Led1 Alias Portc.4                                          'LED ROJO
@@ -53,7 +56,7 @@ Reset Sdi
 
 'Configuración de Interrupciones
 'TIMER0
-Config Timer0 = Timer , Prescale = 256                      'Ints a 800Hz
+Config Timer0 = Timer , Prescale = 1024                     'Ints a 100Hz
 On Timer0 Int_timer0
 Enable Timer0
 Start Timer0
@@ -65,8 +68,8 @@ Enable Timer1
 Start Timer1
 
 'TIMER2
-'Config Timer2 = Timer , Prescale = 128                      'Ints a 800Hz
-'On Timer2 Int_timer2
+Config Timer2 = Timer , Prescale = 256                      'Ints a 480Hz
+On Timer2 Int_timer2
 'Enable Timer2
 'Start Timer2
 
@@ -80,6 +83,10 @@ Dim Dummy As Byte
 Config Date = Dmy , Separator = /
 Config Clock = User
 
+Config Sda = Portb.5
+Config Scl = Portb.4
+Config I2cdelay = 10
+I2cinit
 
 Enable Interrupts
 
@@ -87,7 +94,7 @@ Enable Interrupts
 '*******************************************************************************
 '* Archivos incluidos
 '*******************************************************************************
-$include "DRV-A6282_archivos.bas"
+$include "DRV-A6282_clk_archivos.bas"
 
 
 
@@ -95,6 +102,44 @@ $include "DRV-A6282_archivos.bas"
 
 Call Inivar()
 
+print #1, "Ver CLK"
+estado_led=3
+'Call Getdatetimeds3231()
+
+ Call Leer_rtc()
+
+If Err = 0 Then
+   Print #1 , "RTC Hora=" ; Time$ ; ",Fecha=" ; Date$
+   Tmpl2 = Syssec()
+   If Tmpl2 > 598798055 Then
+      Print #1 , "Hora valida, no es necesario ACTCLK"
+      Estado_led = 1
+      Set Actclk
+   End If
+Else
+   Print # 1 , "ERROR CLK"
+   Estado_led = 3
+   Tmpb = 0
+   Do
+      If Sernew = 1 Then                                    'DATOS SERIAL 1
+         Reset Sernew
+         Print #1 , "SER1=" ; Serproc
+         Call Procser()
+      End If
+      If Newseg = 1 Then
+         Reset Newseg
+         Incr Tmpb
+         Tmpb = Tmpb Mod 10
+         If Tmpb = 0 Then
+            Print #1 , "Ingrese la hora manualmente"
+         End If
+      End If
+   Loop Until Actclk = 1
+   Estado_led = 1
+End If
+
+Enable Timer2
+Start Timer2
 
 
 Do
@@ -134,8 +179,12 @@ Do
       Call Gendigp(tmpb , 1)
 
       Buffram(15)=&h66
-
       'Print #1 , Time$
    End If
 
+   If Newactclk = 1 Then
+      Reset Newactclk
+      Call Leer_rtc()
+
+   End If
 Loop
