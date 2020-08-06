@@ -8,16 +8,16 @@
 '
 
 
-$version 0 , 1 , 140
+$version 0 , 1 , 146
 $regfile = "m328pbdef.dat"
 $crystal = 18432000
 $baud = 9600
 
 
-$hwstack = 152
-$swstack = 152
-$framesize = 152
-$projecttime = 91
+$hwstack = 164
+$swstack = 164
+$framesize = 164
+$projecttime = 95
 
 
 'Declaracion de constantes
@@ -68,7 +68,7 @@ Enable Timer1
 Start Timer1
 
 'TIMER2
-Config Timer2 = Timer , Prescale = 256                      'Ints a 480Hz
+Config Timer2 = Timer , Prescale = 256                      'Ints a 800Hz
 On Timer2 Int_timer2
 'Enable Timer2
 'Start Timer2

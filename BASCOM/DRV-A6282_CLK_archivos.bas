@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 248
+$projecttime = 255
 
 
 '*******************************************************************************
@@ -77,6 +77,9 @@ Dim Horamin As Long
 Dim Horamineep As Eram Long
 
 Dim Topsegeep As Eram Word
+
+dim cntrini as word
+dim cntrinieep as eram word
 'TIMER 2
 
 'Variables SERIAL0
@@ -183,7 +186,8 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer2:                                                 ' Ints a 480 Hz si timer2=&h6a
-   Timer2 = &H6A
+   'Timer2 = &H6A
+   timer2=&ha6 'Ints a 800Hz
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
@@ -270,6 +274,10 @@ Sub Inivar()
 
    Topseg = Topsegeep
    Print #1 , "Topseg=" ; Topseg
+   cntrini=cntrinieep
+   incr cntrini
+    cntriniEEP=cntrini
+   print #1, "CNTRINI=";CNTRINI
 
 End Sub
 
@@ -518,6 +526,21 @@ Sub Procser()
             Case "LEETOP"
                Cmderr = 0
                Atsnd = "Topseg=" + Str(topseg)
+
+            case "SETINI"
+               if numpar=2 then
+                  cmderr=0
+                  cntrini=val(cmdsplit(2))
+                  cntrinieep=cntrini
+                  atsnd="Se config. CNTRini="+str(cntrini)
+               else
+                  cmderr=4
+               endif
+
+            case "LEEINI"
+               cmderr=0
+               atsnd="CNTRini="+str(cntrini)
+
 
       Case Else
       Cmderr = 1
