@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 146
+$version 0 , 1 , 175
 $regfile = "m328pbdef.dat"
 $crystal = 18432000
 $baud = 9600
@@ -17,10 +17,12 @@ $baud = 9600
 $hwstack = 164
 $swstack = 164
 $framesize = 164
-$projecttime = 95
+$projecttime = 126
 
 
 'Declaracion de constantes
+Const Modrtc = 1
+
 Const Nummatriz = 5                                         'Una matriz esunmodulo P10 de 16x32
 Const Longbuf = Nummatriz * 8
 Const Longbuf_masuno = Longbuf + 1
@@ -68,7 +70,7 @@ Enable Timer1
 Start Timer1
 
 'TIMER2
-Config Timer2 = Timer , Prescale = 256                      'Ints a 800Hz
+Config Timer2 = Timer , Prescale = 256                      'Ints a 480Hz
 On Timer2 Int_timer2
 'Enable Timer2
 'Start Timer2
@@ -79,10 +81,14 @@ On Urxc At_ser1
 Enable Urxc
 
 '***Date/Time***
+
+
+
+
 Dim Dummy As Byte
 Config Date = Dmy , Separator = /
-Config Clock = User
 
+Config Clock = User
 Config Sda = Portb.5
 Config Scl = Portb.4
 Config I2cdelay = 10
@@ -102,11 +108,11 @@ $include "DRV-A6282_clk_archivos.bas"
 
 Call Inivar()
 
+#if Modrtc = 1
 print #1, "Ver CLK"
 estado_led=3
-'Call Getdatetimeds3231()
+Call Leer_rtc()
 
- Call Leer_rtc()
 
 If Err = 0 Then
    Print #1 , "RTC Hora=" ; Time$ ; ",Fecha=" ; Date$
@@ -137,7 +143,7 @@ Else
    Loop Until Actclk = 1
    Estado_led = 1
 End If
-
+#endif
 Enable Timer2
 Start Timer2
 
@@ -152,7 +158,10 @@ Do
 
    If Newseg = 1 Then
       Reset Newseg
+
       Tmptime = Time$
+'      print #1, TMPTIME
+
 
       Tmpstr = Mid(tmptime , 1 , 1)
       Tmpb = Val(tmpstr)
@@ -178,13 +187,14 @@ Do
       Tmpb = Val(tmpstr)
       Call Gendigp(tmpb , 1)
 
-      Buffram(15)=&h66
+      Buffram(15) = &H66
       'Print #1 , Time$
    End If
 
+#if Modrtc = 1
    If Newactclk = 1 Then
       Reset Newactclk
       Call Leer_rtc()
-
    End If
+#endif
 Loop

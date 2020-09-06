@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 255
+$projecttime = 275
 
 
 '*******************************************************************************
@@ -19,11 +19,13 @@ Declare Sub Procser()
 Declare Sub Gendig(byval Valdig As Byte , Byval Posdig As Byte)
 Declare Sub Gendigp(byval Valdig As Byte , Byval Posdig As Byte)
 'RTC
+#if Modrtc = 1
 Declare Sub Getdatetimeds3231()
 Declare Sub Error(byval Genre As Byte)
 Declare Sub Setdateds3231()
 Declare Sub Settimeds3231()
 Declare Sub Leer_rtc()
+#endif
 
 
 '*******************************************************************************
@@ -156,18 +158,21 @@ Return
 
 Int_timer1:
    Timer1 = &HB9B0
+
    Tmpltime = Syssec()
+
    Incr Tmpltime
+
    Tmpsec = Time(tmpltime)
    Time$ = Tmpsec
    Tmpsec = Date(tmpltime)
    Date$ = Tmpsec
+
    Set Newseg
    Incr Cntrseg
    Cntrseg = Cntrseg Mod Topseg
    If Cntrseg = 0 Then
       Set Newactclk
-
    End If
 Return
 
@@ -185,9 +190,9 @@ Return
 '*******************************************************************************
 ' TIMER0
 '*******************************************************************************
-Int_timer2:                                                 ' Ints a 480 Hz si timer2=&h6a
+Int_timer2:                                                 ' Ints a 800 Hz si timer2=&h6a
    'Timer2 = &H6A
-   timer2=&ha6 'Ints a 800Hz
+   Timer2 = &HA6                                            'Ints a 480Hz
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
@@ -262,9 +267,11 @@ Sub Inivar()
 '   Next
 
    Horamin = Horamineep
+
    Print #1 , "Last act CLK " ; Date(horamin) ; "," ; Time(horamin)
    'Tmplntp = Syssec(horamin)
    Tmpstr8 = Time(horamin)
+
    Time$ = Tmpstr8
    Print #1 , "Ts:" ; Tmpstr8 ; " T:" ; Time$
    Tmpstr8 = Date(horamin)
@@ -458,6 +465,7 @@ Sub Procser()
                Cmderr = 5
             End If
 
+
             Case "SETCLK"
                If Numpar = 2 Then
                   Cmderr = 0
@@ -475,9 +483,11 @@ Sub Procser()
                      Atsnd = "WATCHING INFORMA. Se configuro reloj en " + Date$ + " a " + Time$
                      'Set Actclkok
                      Dow = Dayofweek()
+#if Modrtc = 1
                      Call Setdateds3231()
                      Call Settimeds3231()
                      Call Getdatetimeds3231()
+#endif
                      Horamin = Syssec()
                      Horamineep = Horamin
                      Set Actclk
@@ -492,6 +502,13 @@ Sub Procser()
                   Cmderr = 5
                End If
 
+            Case "SISCLK"
+               Cmderr = 0
+               Tmpstr52 = Date$
+               Atsnd = "Hora actual " + Tmpstr52 + " a "  '+ Time(horamin)
+               Tmpstr52 = Time$
+               Atsnd = Atsnd + Tmpstr52
+
 
             Case "LEECLK"
                Cmderr = 0
@@ -500,12 +517,7 @@ Sub Procser()
                Tmpstr52 = Time(horamin)
                Atsnd = Atsnd + Tmpstr52
 
-            Case "SISCLK"
-               Cmderr = 0
-               Tmpstr52 = Date$
-               Atsnd = "Hora actual " + Tmpstr52 + " a "  '+ Time(horamin)
-               Tmpstr52 = Time$
-               Atsnd = Atsnd + Tmpstr52
+
 
             Case "ACTCLK"
                Cmderr = 0
@@ -559,6 +571,7 @@ Sub Procser()
 End Sub
 
 
+#if Modrtc = 1
 '*****************************************************************************
 '---------routines I2C for  RTC DS3231----------------------------------------
 
@@ -692,6 +705,7 @@ Sub Leer_rtc()
    Loop Until Tmpb = 10 Or Tmpb2 = 1
 End Sub
 
+#endif
 '*******************************************************************************
 'TABLA DE DATOS
 '*******************************************************************************
