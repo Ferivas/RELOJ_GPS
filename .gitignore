@@ -6,3 +6,7 @@
 *.hex
 *.obj
 *.rpt
+*.SIM
+*.pcbdocPreview
+*.drc
+*.html

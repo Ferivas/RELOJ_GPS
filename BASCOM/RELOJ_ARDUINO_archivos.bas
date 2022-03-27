@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 275
+$projecttime = 299
 
 
 '*******************************************************************************
@@ -60,7 +60,7 @@ Dim Tmpstr As String * 2
 Dim Dow As Byte
 Dim Actclk As Bit
 Dim Newactclk As Bit
-Dim Cntrseg As Byte
+Dim Cntrseg As word
 Dim Topseg As Word
 
 'Variables TIMER0
@@ -83,6 +83,7 @@ Dim Topsegeep As Eram Word
 dim cntrini as word
 dim cntrinieep as eram word
 'TIMER 2
+DIM T2C as byte
 
 'Variables SERIAL0
 Dim Ser_ini As Bit , Sernew As Bit
@@ -141,58 +142,13 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer0:
-   Timer0 = &H4C                                            '100 Hz con 18.432MHz
+   Timer0 = &H98                                            '600 Hz con 12MHz
    Incr T0c
-   T0c = T0c Mod 8
+   T0c = T0c Mod 200
    If T0c = 0 Then
-      Num_ventana = Num_ventana Mod 32
-      Estado = Lookup(estado_led , Tabla_estado)
-      Iluminar = Estado.num_ventana
-      Toggle Iluminar
-      Led1 = Iluminar
-      Incr Num_ventana
+      Toggle led1
    End If
 
-Return
-
-
-Int_timer1:
-   Timer1 = &HB9B0
-
-   Tmpltime = Syssec()
-
-   Incr Tmpltime
-
-   Tmpsec = Time(tmpltime)
-   Time$ = Tmpsec
-   Tmpsec = Date(tmpltime)
-   Date$ = Tmpsec
-
-   Set Newseg
-   Incr Cntrseg
-   Cntrseg = Cntrseg Mod Topseg
-   If Cntrseg = 0 Then
-      Set Newactclk
-   End If
-Return
-
-
-Settime:
-Return
-
-Getdatetime:
-Return
-
-Setdate:
-Return
-
-
-'*******************************************************************************
-' TIMER0
-'*******************************************************************************
-Int_timer2:                                                 ' Ints a 800 Hz si timer2=&h6a
-   'Timer2 = &HA6
-   Timer2 = &HA6                                            'Ints a 480Hz
    Set Oena                                                 ' Apago driver
    Incr Cntr_col
    Datocol = Lookup(cntr_col , Tbl_col)
@@ -232,11 +188,71 @@ Int_timer2:                                                 ' Ints a 800 Hz si t
    Cntr_col = Cntr_col Mod 8
    nop
    nop
-   nop
-   nop
-   nop
+'   nop
+'   nop
+'   nop
    Reset Oena
 
+
+Return
+
+
+'Int_timer1:
+'   Timer1 = &H0BDC
+
+'   Tmpltime = Syssec()
+
+'   Incr Tmpltime
+
+'   Tmpsec = Time(tmpltime)
+'   Time$ = Tmpsec
+'   Tmpsec = Date(tmpltime)
+'   Date$ = Tmpsec
+
+'   Set Newseg
+'   Incr Cntrseg
+'   Cntrseg = Cntrseg Mod Topseg
+'   If Cntrseg = 0 Then
+'      Set Newactclk
+'   End If
+'Return
+
+
+'*******************************************************************************
+' TIMER2
+'*******************************************************************************
+Int_timer2:
+   Timer2 = &H83
+   Incr T2c
+   T2C=T2C MOD 125
+   If T2c = 0 Then
+      Tmpltime = Syssec()
+
+      Incr Tmpltime
+
+      Tmpsec = Time(tmpltime)
+      Time$ = Tmpsec
+      Tmpsec = Date(tmpltime)
+      Date$ = Tmpsec
+
+      Set Newseg
+      Incr Cntrseg
+      Cntrseg = Cntrseg Mod Topseg
+      If Cntrseg = 0 Then
+         Set Newactclk
+      End If
+   ENDIF
+
+RETURN
+
+
+Settime:
+Return
+
+Getdatetime:
+Return
+
+Setdate:
 Return
 
 
@@ -516,8 +532,6 @@ Sub Procser()
                Atsnd = "Ultima ACT CLK en " + Tmpstr52 + " a "       '+ Time(horamin)
                Tmpstr52 = Time(horamin)
                Atsnd = Atsnd + Tmpstr52
-
-
 
             Case "ACTCLK"
                Cmderr = 0
