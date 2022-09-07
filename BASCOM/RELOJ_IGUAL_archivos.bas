@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 381
+$projecttime = 391
 
 
 '*******************************************************************************
@@ -286,17 +286,17 @@ Return
 '*******************************************************************************
 Sub Inivar()
    Reset Led1
-   Print #1 , "************ MAINSERLED M8 ************"
+  ' Print #1 , "************ MAINSERLED M8 ************"
    Print #1 , Version(1)
    Print #1 , Version(2)
    Print #1 , Version(3)
    Estado_led = 1
-   Print #1 , "Nummatriz=" ; Nummatriz
-   Print #1 , "Longbuf=" ; Longbuf
+   'Print #1 , "Nummatriz=" ; Nummatriz
+   'Print #1 , "Longbuf=" ; Longbuf
 
-   For Tmpb = 1 To Longbuf
-      Buffram(tmpb) = 0
-   Next
+'   For Tmpb = 1 To Longbuf
+'      Buffram(tmpb) = 0
+'   Next
 
 '   For Tmpb = 0 To 3
 '       Call Gendig(tmpb , Tmpb)
@@ -520,7 +520,13 @@ Sub Menu()
 End Sub
 
 Sub Lee_enc()
+#if Vhw = 1
+   Varenc = Encoder(pinc.1 , Pinc.2 , Movizq , Movder , 0)
+#endif
+
+#if Vhw = 2
    Varenc = Encoder(pinc.2 , Pinc.1 , Movizq , Movder , 0)
+#endif
    If Cntrenc <> Cntrencant Then
       Cntrencant = Cntrenc
       Tmpenc = Cntrenc Mod 4

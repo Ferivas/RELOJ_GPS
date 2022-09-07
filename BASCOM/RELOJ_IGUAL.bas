@@ -8,8 +8,8 @@
 '
 
 
-$version 0 , 1 , 228
-$regfile = "m328def.dat"
+$version 0 , 1 , 235
+$regfile = "m328pdef.dat"
 $crystal = 16000000
 $baud = 9600
 
@@ -17,11 +17,12 @@ $baud = 9600
 $hwstack = 180
 $swstack = 180
 $framesize = 180
-$projecttime = 197
+$projecttime = 214
 
 
 'Declaracion de constantes
-Const Modrtc = 0
+Const Modrtc = 1
+Const Vhw = 1                                               '1 version Arduino Nano, 2 version IBUTTON
 
 Const Nummatriz = 5                                         'Una matriz esunmodulo P10 de 16x32
 Const Longbuf = Nummatriz * 8
@@ -38,10 +39,33 @@ Const Ds3231r = &B11010001                                  'DS3231 is very simi
 Const Ds3231w = &B11010000
 
 'Configuracion de entradas/salidas
+#if Vhw = 1
+Led1 Alias Portb.5                                          'LED ROJO
+Config Led1 = Output
+#endif
+
+
+#if Vhw = 2
 Led1 Alias Portc.3                                          'LED ROJO
 Config Led1 = Output
+#endif
+
+
 
 'PINES interfaz
+#if Vhw = 1
+Oena Alias Portd.5
+Config Oena = Output
+Sdi Alias Portd.4
+Config sdi = Output
+Clk Alias Portd.3
+Config Clk = Output
+Lena Alias Portd.2
+Config Lena = Output
+#endif
+
+
+#if Vhw = 2
 Oena Alias Portc.0
 Config Oena = Output
 Sdi Alias Portb.3
@@ -50,6 +74,7 @@ Clk Alias Portb.4
 Config Clk = Output
 Lena Alias Portb.5
 Config Lena = Output
+#endif
 
 Set Clk
 Reset Lena
@@ -57,12 +82,23 @@ Reset Oena
 Reset Sdi
 
 'Encoder
+#if Vhw = 1
+Swenc Alias Pinc.0
+Config Swenc = Input
+Set Portc.0
+
+Set Portc.1
+Set Portc.2
+#endif
+
+#if Vhw = 2
 Swenc Alias Pind.5
 Config Swenc = Input
 Set Portd.5
 
 Set Portc.1
 Set Portc.2
+#endif
 
 'Configuración de Interrupciones
 'TIMER0
