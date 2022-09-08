@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 391
+$projecttime = 395
 
 
 '*******************************************************************************
@@ -286,6 +286,8 @@ Return
 '*******************************************************************************
 Sub Inivar()
    Reset Led1
+   Tmptime = "00:00:00"
+   Call Disptime()
   ' Print #1 , "************ MAINSERLED M8 ************"
    Print #1 , Version(1)
    Print #1 , Version(2)
@@ -321,6 +323,7 @@ Sub Inivar()
    incr cntrini
    Cntrinieep = Cntrini
    print #1, "CNTRINI=";CNTRINI
+   Set Newseg
 
 End Sub
 

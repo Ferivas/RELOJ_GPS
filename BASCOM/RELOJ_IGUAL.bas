@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 235
+$version 0 , 1 , 238
 $regfile = "m328pdef.dat"
 $crystal = 16000000
 $baud = 9600
@@ -17,7 +17,7 @@ $baud = 9600
 $hwstack = 180
 $swstack = 180
 $framesize = 180
-$projecttime = 214
+$projecttime = 219
 
 
 'Declaracion de constantes
