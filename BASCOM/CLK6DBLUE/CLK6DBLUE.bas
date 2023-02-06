@@ -8,21 +8,20 @@
 '
 
 
-$version 0 , 1 , 253
-$regfile = "m328pdef.dat"
-$crystal = 16000000
+$version 0 , 1 , 312
+$regfile = "m644pdef.dat"
+$crystal = 11059200
 $baud = 9600
 
 
-$hwstack = 180
-$swstack = 180
-$framesize = 180
-$projecttime = 225
+$hwstack = 116
+$swstack = 116
+$framesize = 116
+$projecttime = 284
 
 
 'Declaracion de constantes
 Const Modrtc = 0
-Const Vhw = 3                                               '1 version Arduino Nano, 2 version IBUTTON,3 version DIMMERLED
 
 Const Nummatriz = 4                                         'Una matriz esunmodulo P10 de 16x32
 Const Longbuf = Nummatriz * 8
@@ -39,57 +38,26 @@ Const Ds3231r = &B11010001                                  'DS3231 is very simi
 Const Ds3231w = &B11010000
 
 'Configuracion de entradas/salidas
-#if Vhw = 1
-Led1 Alias Portb.5                                          'LED ROJO
+Led1 Alias Portd.4                                          'LED ROJO
 Config Led1 = Output
-#endif
-
-
-#if Vhw = 2
-Led1 Alias Portc.3                                          'LED ROJO
-Config Led1 = Output
-#endif
-
-
-#if Vhw = 3
-Led1 Alias Portb.0                                          'LED ROJO
-Config Led1 = Output
-#endif
 
 'PINES interfaz
-#if Vhw = 1
-Oena Alias Portd.5
-Config Oena = Output
-Sdi Alias Portd.4
-Config sdi = Output
-Clk Alias Portd.3
-Config Clk = Output
-Lena Alias Portd.2
-Config Lena = Output
-#endif
-
-
-#if Vhw = 2
-Oena Alias Portc.0
-Config Oena = Output
-Sdi Alias Portb.3
-Config Sdi = Output
-Clk Alias Portb.4
-Config Clk = Output
-Lena Alias Portb.5
-Config Lena = Output
-#endif
-
-#if Vhw = 3
 Oena Alias Portb.3
 Config Oena = Output
-Sdi Alias Portb.4
+Sdi Alias Portb.0
 Config Sdi = Output
-Clk Alias Portb.5
+Clk Alias Portb.1
 Config Clk = Output
 Lena Alias Portb.2
 Config Lena = Output
-#endif
+
+Enc0 Alias Portc.0
+Config Enc0 = Output
+Enc1 Alias Portc.1
+Config Enc1 = Output
+Enc2 Alias Portc.2
+Config Enc2 = Output
+
 
 Set Clk
 Reset Lena
@@ -97,36 +65,17 @@ Reset Oena
 Reset Sdi
 
 'Encoder
-#if Vhw = 1
-Swenc Alias Pinc.0
+Swenc Alias Pinc.3
 Config Swenc = Input
-Set Portc.0
-
-Set Portc.1
-Set Portc.2
-#endif
-
-#if Vhw = 2
-Swenc Alias Pind.5
-Config Swenc = Input
-Set Portd.5
-
-Set Portc.1
-Set Portc.2
-#endif
-
-#if Vhw = 3
-Swenc Alias Pinb.6
-Config Swenc = Input
-Set Portb.6
-
-Set Portc.2
 Set Portc.3
-#endif
+
+Set Portc.4
+Set Portc.5
+
 
 'Configuración de Interrupciones
 'TIMER0
-Config Timer0 = Timer , Prescale = 256                     'Ints a 100Hz
+Config Timer0 = Timer , Prescale = 256                      'Ints a 100Hz
 On Timer0 Int_timer0
 Enable Timer0
 Start Timer0
@@ -138,7 +87,7 @@ Enable Timer1
 Start Timer1
 
 'TIMER2
-Config Timer2 = Timer , Prescale = 1024                      'Ints a 480Hz
+Config Timer2 = Timer , Prescale = 1024                     'Ints a 480Hz
 On Timer2 Int_timer2
 Enable Timer2
 Start Timer2
@@ -166,7 +115,7 @@ Enable Interrupts
 '*******************************************************************************
 '* Archivos incluidos
 '*******************************************************************************
-$include "CLK_4D_archivos.bas"
+$include "CLK6DBLUE_archivos.bas"
 
 
 
@@ -175,7 +124,7 @@ $include "CLK_4D_archivos.bas"
 Call Inivar()
 
 #if Modrtc = 1
-print #1, "Ver CLK"
+Print #1 , "Ver CLK"
 estado_led=3
 Call Leer_rtc()
 

@@ -8,16 +8,16 @@
 '
 
 
-$version 0 , 1 , 253
+$version 0 , 1 , 255
 $regfile = "m328pdef.dat"
-$crystal = 16000000
+$crystal = 8000000
 $baud = 9600
 
 
 $hwstack = 180
 $swstack = 180
 $framesize = 180
-$projecttime = 225
+$projecttime = 230
 
 
 'Declaracion de constantes
@@ -166,7 +166,7 @@ Enable Interrupts
 '*******************************************************************************
 '* Archivos incluidos
 '*******************************************************************************
-$include "CLK_4D_archivos.bas"
+$include "CLK_4D_DIMMERLED_archivos.bas"
 
 
 

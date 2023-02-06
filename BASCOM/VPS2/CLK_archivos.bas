@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 417
+$projecttime = 430
 
 
 '*******************************************************************************
@@ -43,7 +43,7 @@ Dim Tmpl2 As Long
 Dim Cntrtime As Byte
 
 Dim Cmdtmp As String * 6
-Dim Atsnd As String * 200
+Dim Atsnd As String * 120
 Dim Cmderr As Byte
 Dim Tmpstr8 As String * 16
 Dim Tmpstr52 As String * 52
@@ -112,8 +112,8 @@ Dim T0rate As Word
 'Variables SERIAL0
 Dim Ser_ini As Bit , Sernew As Bit
 Dim Numpar As Byte
-Dim Cmdsplit(8) As String * 20
-Dim Serdata As String * 160 , Serrx As Byte , Serproc As String * 160
+Dim Cmdsplit(4) As String * 20
+Dim Serdata As String * 120 , Serrx As Byte , Serproc As String * 120
 
 
 
@@ -166,7 +166,8 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer0:
-   Timer0 = &H98                                            '600 Hz con 12MHz
+   'Timer0 = &H98                                            '600 Hz con 12MHz
+   Timer0 = &HD0
    Incr T0c
    T0c = T0c Mod 200
    If T0c = 0 Then
@@ -222,7 +223,8 @@ Return
 
 
 Int_timer1:
-   Timer1 = &HC2F7
+   'Timer1 = &HC2F7
+   Timer1 = &HE3E0
 
    Tmpltime = Syssec()
 
@@ -246,7 +248,8 @@ Return
 ' TIMER2
 '*******************************************************************************
 Int_timer2:
-   Timer2 = &H64                                            '100.1603 Hz
+   'Timer2 = &H64                                            '100.1603 Hz
+   Timer2 = &HB8                                            '100 Hz CON 7.3728MHz
    If T0ini = 1 Then
       Incr T0cntr
       If T0cntr = T0rate Then
@@ -527,11 +530,7 @@ Sub Lee_enc()
 #if Vhw = 2
    Varenc = Encoder(pinc.2 , Pinc.1 , Movizq , Movder , 0)
 #endif
-
-#if Vhw = 3
-   Varenc = Encoder(pinc.2 , Pinc.3 , Movizq , Movder , 0)
-#endif
-
+   Varenc = Encoder(pinb.4 , Pinb.3 , Movizq , Movder , 0)
    If Cntrenc <> Cntrencant Then
       Cntrencant = Cntrenc
       Tmpenc = Cntrenc Mod 4
@@ -627,6 +626,7 @@ Sub Procser()
       Cmdtmp = Ucase(cmdtmp)
       Cmderr = 255
       Select Case Cmdtmp
+'(
          Case "LEEVFW"
             Cmderr = 0
             Atsnd = "Version FW: Fecha <"
@@ -650,6 +650,7 @@ Sub Procser()
             Else
                Cmderr = 4
             End If
+
 
          Case "SETBUF"
             If Numpar = 3 Then
@@ -732,7 +733,7 @@ Sub Procser()
 '               Cmderr = 5
 '            End If
 
-
+')
             Case "SETCLK"
                If Numpar = 2 Then
                   Cmderr = 0
@@ -805,7 +806,8 @@ Sub Procser()
                Cmderr = 0
                Atsnd = "Topseg=" + Str(topseg)
 
-            case "SETINI"
+'(
+            Case "SETINI"
                if numpar=2 then
                   cmderr=0
                   cntrini=val(cmdsplit(2))
@@ -818,7 +820,7 @@ Sub Procser()
             case "LEEINI"
                cmderr=0
                atsnd="CNTRini="+str(cntrini)
-
+')
 
       Case Else
       Cmderr = 1

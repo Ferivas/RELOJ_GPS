@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 417
+$projecttime = 418
 
 
 '*******************************************************************************
@@ -166,7 +166,7 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer0:
-   Timer0 = &H98                                            '600 Hz con 12MHz
+   Timer0 = &HCC                                            '600 Hz con 8MHz
    Incr T0c
    T0c = T0c Mod 200
    If T0c = 0 Then
@@ -222,7 +222,7 @@ Return
 
 
 Int_timer1:
-   Timer1 = &HC2F7
+   Timer1 = &HE17C
 
    Tmpltime = Syssec()
 
@@ -246,7 +246,7 @@ Return
 ' TIMER2
 '*******************************************************************************
 Int_timer2:
-   Timer2 = &H64                                            '100.1603 Hz
+   Timer2 = &HB2                                            '100.1603 Hz
    If T0ini = 1 Then
       Incr T0cntr
       If T0cntr = T0rate Then

@@ -8,21 +8,22 @@
 '
 
 
-$version 0 , 1 , 253
-$regfile = "m328pdef.dat"
-$crystal = 16000000
+$version 0 , 1 , 269
+'$regfile = "m328pdef.dat"
+$regfile = "m168def.dat"
+$crystal = 7372800
 $baud = 9600
 
 
-$hwstack = 180
-$swstack = 180
-$framesize = 180
-$projecttime = 225
+$hwstack = 96
+$swstack = 96
+$framesize = 96
+$projecttime = 238
 
 
 'Declaracion de constantes
-Const Modrtc = 0
-Const Vhw = 3                                               '1 version Arduino Nano, 2 version IBUTTON,3 version DIMMERLED
+Const Modrtc = 1
+Const Vhw = 3                                               '1 version Arduino Nano, 2 version IBUTTON , PS2SERIAL
 
 Const Nummatriz = 4                                         'Una matriz esunmodulo P10 de 16x32
 Const Longbuf = Nummatriz * 8
@@ -50,11 +51,12 @@ Led1 Alias Portc.3                                          'LED ROJO
 Config Led1 = Output
 #endif
 
-
 #if Vhw = 3
 Led1 Alias Portb.0                                          'LED ROJO
 Config Led1 = Output
 #endif
+
+
 
 'PINES interfaz
 #if Vhw = 1
@@ -81,13 +83,13 @@ Config Lena = Output
 #endif
 
 #if Vhw = 3
-Oena Alias Portb.3
+Oena Alias Portc.0
 Config Oena = Output
-Sdi Alias Portb.4
+Sdi Alias Portc.1
 Config Sdi = Output
-Clk Alias Portb.5
+Clk Alias Portc.2
 Config Clk = Output
-Lena Alias Portb.2
+Lena Alias Portc.3
 Config Lena = Output
 #endif
 
@@ -116,17 +118,18 @@ Set Portc.2
 #endif
 
 #if Vhw = 3
-Swenc Alias Pinb.6
+Swenc Alias Pinb.5
 Config Swenc = Input
-Set Portb.6
+Set Portb.5
 
-Set Portc.2
-Set Portc.3
+Set Portb.3
+Set Portb.4
 #endif
+
 
 'Configuración de Interrupciones
 'TIMER0
-Config Timer0 = Timer , Prescale = 256                     'Ints a 100Hz
+Config Timer0 = Timer , Prescale = 256                      'Ints a 100Hz
 On Timer0 Int_timer0
 Enable Timer0
 Start Timer0
@@ -166,7 +169,7 @@ Enable Interrupts
 '*******************************************************************************
 '* Archivos incluidos
 '*******************************************************************************
-$include "CLK_4D_archivos.bas"
+$include "CLK_archivos.bas"
 
 
 

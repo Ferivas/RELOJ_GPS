@@ -8,7 +8,7 @@
 '
 
 
-$version 0 , 1 , 238
+$version 0 , 1 , 239
 $regfile = "m328pdef.dat"
 $crystal = 16000000
 $baud = 9600
@@ -21,7 +21,7 @@ $projecttime = 219
 
 
 'Declaracion de constantes
-Const Modrtc = 1
+Const Modrtc = 0
 Const Vhw = 1                                               '1 version Arduino Nano, 2 version IBUTTON
 
 Const Nummatriz = 5                                         'Una matriz esunmodulo P10 de 16x32

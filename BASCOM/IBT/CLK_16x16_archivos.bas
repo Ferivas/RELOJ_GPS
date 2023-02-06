@@ -8,7 +8,7 @@
 '* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 $nocompile
-$projecttime = 417
+$projecttime = 489
 
 
 '*******************************************************************************
@@ -43,7 +43,7 @@ Dim Tmpl2 As Long
 Dim Cntrtime As Byte
 
 Dim Cmdtmp As String * 6
-Dim Atsnd As String * 200
+Dim Atsnd As String * 120
 Dim Cmderr As Byte
 Dim Tmpstr8 As String * 16
 Dim Tmpstr52 As String * 52
@@ -112,8 +112,8 @@ Dim T0rate As Word
 'Variables SERIAL0
 Dim Ser_ini As Bit , Sernew As Bit
 Dim Numpar As Byte
-Dim Cmdsplit(8) As String * 20
-Dim Serdata As String * 160 , Serrx As Byte , Serproc As String * 160
+Dim Cmdsplit(4) As String * 20
+Dim Serdata As String * 120 , Serrx As Byte , Serproc As String * 120
 
 
 
@@ -166,11 +166,14 @@ Return
 ' TIMER0
 '*******************************************************************************
 Int_timer0:
-   Timer0 = &H98                                            '600 Hz con 12MHz
+   'Timer0 = &H98                                            '600 Hz con 16MHz
+   'Timer0 = &HD0                '600 con 7.3728MHZ
+   'Timer0 = &H7E                                            '600 con 20 MHz
+   Timer0 = &HBC
    Incr T0c
    T0c = T0c Mod 200
    If T0c = 0 Then
-      Toggle led1
+      Toggle Led1
    End If
 
    Set Oena                                                 ' Apago driver
@@ -222,7 +225,10 @@ Return
 
 
 Int_timer1:
-   Timer1 = &HC2F7
+   'Timer1 = &HC2F7
+   'Timer1 = &HE3E0
+   'Timer1 = &HB3B5
+   Timer1 = &HD873
 
    Tmpltime = Syssec()
 
@@ -246,7 +252,10 @@ Return
 ' TIMER2
 '*******************************************************************************
 Int_timer2:
-   Timer2 = &H64                                            '100.1603 Hz
+   'Timer2 = &H64                                            '100.1603 Hz
+   'Timer2 = &HB8                                            '100 Hz CON 7.3728MHz
+   'Timer2 = &H3D                                            '100 Hz CON 20MHz
+   Timer2 = &H9B
    If T0ini = 1 Then
       Incr T0cntr
       If T0cntr = T0rate Then
@@ -520,18 +529,7 @@ Sub Menu()
 End Sub
 
 Sub Lee_enc()
-#if Vhw = 1
-   Varenc = Encoder(pinc.1 , Pinc.2 , Movizq , Movder , 0)
-#endif
-
-#if Vhw = 2
-   Varenc = Encoder(pinc.2 , Pinc.1 , Movizq , Movder , 0)
-#endif
-
-#if Vhw = 3
-   Varenc = Encoder(pinc.2 , Pinc.3 , Movizq , Movder , 0)
-#endif
-
+   Varenc = Encoder(pinc.3 , Pinc.2 , Movizq , Movder , 0)
    If Cntrenc <> Cntrencant Then
       Cntrencant = Cntrenc
       Tmpenc = Cntrenc Mod 4
@@ -576,19 +574,19 @@ Sub Disptime()
    'Tmptime = Time$
    Incr Cntrtime
 
-   Tmpstr = Mid(tmptime , 1 , 1)
+   Tmpstr = Mid(tmptime , 1 , 1)                            'DecHora
    Tmpb = Val(tmpstr)
    Call Gendig(tmpb , 0)
 
-   Tmpstr = Mid(tmptime , 2 , 1)
+   Tmpstr = Mid(tmptime , 2 , 1)                            'Unidades Hora
    Tmpb = Val(tmpstr)
    Call Gendig(tmpb , 1)
 
-   Tmpstr = Mid(tmptime , 4 , 1)
+   Tmpstr = Mid(tmptime , 4 , 1)                            'Dec Minutos
    Tmpb = Val(tmpstr)
    Call Gendig(tmpb , 2)
 
-   Tmpstr = Mid(tmptime , 5 , 1)
+   Tmpstr = Mid(tmptime , 5 , 1)                            'Unidades Minuto
    Tmpb = Val(tmpstr)
    Call Gendig(tmpb , 3)
 
@@ -601,11 +599,13 @@ Sub Disptime()
 '   Call Gendigp(tmpb , 1)
 
    If Cntrtime.0 = 1 Then                                   'aQUI SE GENERAN LOS DOS PUNTOS INTERMITENTES
-      Buffram(16) = &H66
-      Buffram(17) = &H66
+      Buffram(32) = &H66
+      Buffram(31) = &H66
+'      Buffram(17) = &H66
    Else
-      Buffram(16) = &H00
-      Buffram(17) = &H00
+      Buffram(32) = &H00
+      Buffram(31) = &H00
+'      Buffram(17) = &H00
    End If
 End Sub
 
@@ -627,6 +627,7 @@ Sub Procser()
       Cmdtmp = Ucase(cmdtmp)
       Cmderr = 255
       Select Case Cmdtmp
+
          Case "LEEVFW"
             Cmderr = 0
             Atsnd = "Version FW: Fecha <"
@@ -651,6 +652,7 @@ Sub Procser()
                Cmderr = 4
             End If
 
+'(
          Case "SETBUF"
             If Numpar = 3 Then
                Tmpb = Val(cmdsplit(2))
@@ -732,7 +734,7 @@ Sub Procser()
 '               Cmderr = 5
 '            End If
 
-
+')
             Case "SETCLK"
                If Numpar = 2 Then
                   Cmderr = 0
@@ -805,7 +807,8 @@ Sub Procser()
                Cmderr = 0
                Atsnd = "Topseg=" + Str(topseg)
 
-            case "SETINI"
+'(
+            Case "SETINI"
                if numpar=2 then
                   cmderr=0
                   cntrini=val(cmdsplit(2))
@@ -818,7 +821,7 @@ Sub Procser()
             case "LEEINI"
                cmderr=0
                atsnd="CNTRini="+str(cntrini)
-
+')
 
       Case Else
       Cmderr = 1
@@ -1008,21 +1011,35 @@ Tabla_estado:
    Data &B00000000000000000000000000110011&                    'Estado 2
    Data &B00000000000000000000001100110011&                    'Estado 3
    Data &B00000000000000000011001100110011&                 'Estado 4
-   Data &B00000000000000110011001100110011&                    'Estado 5
+   Data &B00000000000000110011001100110011&                 'Estado 5
    Data &B00000000000011001100000000110011&                    'Estado 6
-   Data &B00001111111111110000111111111111&                    'Estado 7
+   Data &B00001111111111110000111111111111&                 'Estado 7
    Data &B01010101010101010101010101010101&                    'Estado 8
-   Data &B00110011001100110011001100110011&                    'Estado 9
-   Data &B01110111011101110111011101110111&                    'Estado 10
+   Data &B00110011001100110011001100110011&                 'Estado 9
+   Data &B01110111011101110111011101110111&                 'Estado 10
    Data &B11111111111111000000000000001100&                    'Estado 11
    Data &B11111111111111000000000011001100&                    'Estado 12
    Data &B11111111111111000000110011001100&                    'Estado 13
-   Data &B11111111111111001100110011001100&                    'Estado 14
+   Data &B11111111111111001100110011001100&                 'Estado 14
    Data &B11111111111111000000000000001100&                    'Estado 15
    Data &B11111111111111111111111111110000&                    'Estado 16
 
 
+
 Tbl_posdig:
+Data 17
+Data 24
+Data 3
+Data 11
+
+
+Data 19
+Data 25
+Data 3
+Data 9
+
+
+Tbl_posdig2:
 Data 1
 Data 9
 Data 19
@@ -1035,158 +1052,172 @@ Data 32
 Data 37
 Data 17
 
-
 Tbl_dig:
-Data &B01111110                                             '0
-Data &B11111111
-Data &B10000001
-Data &B10000001
-Data &B11111111
-Data &B01111110
+Data        &B00111110
+Data        &B01111111
+Data        &B01000001
+Data        &B01000001
+Data        &B01111111
+Data        &B00111110
 
 
-Data &B00100000                                             '1
-Data &B01000001
-Data &B11111111
-Data &B11111111
-Data &B00000001
-Data &B00000000
+Data        &B00000000
+Data        &B00100001
+Data        &B01111111
+Data        &B01111111
+Data        &B00000001
+Data        &B00000000
 
 
-Data &B10001111                                             '2
-Data &B10011111
-Data &B10010001
-Data &B10010001
-Data &B11110001
-Data &B01100001
+Data        &B00100001
+Data        &B01100011
+Data        &B01000111
+Data        &B01001101
+Data        &B01111001
+Data        &B00110001
 
 
-Data &B10000001                                             '3
-Data &B10010001
-Data &B10010001
-Data &B10010001
-Data &B11111111
-Data &B01101110
+Data        &B00100010
+Data        &B01100011
+Data        &B01001001
+Data        &B01001001
+Data        &B01111111
+Data        &B00110110
 
 
-Data &B11110000                                             '4
-Data &B11111000
-Data &B00001000
-Data &B00001000
-Data &B11111111
-Data &B11111111
+Data        &B01111100
+Data        &B01111100
+Data        &B00000100
+Data        &B00111111
+Data        &B00111111
+Data        &B00000100
 
 
-Data &B11110001                                             '5
-Data &B11110001
-Data &B10010001
-Data &B10010001
-Data &B10011111
-Data &B10001110
+Data        &B01111010
+Data        &B01111011
+Data        &B01001001
+Data        &B01001001
+Data        &B01001111
+Data        &B01000110
 
 
-Data &B01111110                                             '6
-Data &B11111111
-Data &B10010001
-Data &B10010001
-Data &B10011111
-Data &B00001110
+Data        &B00111110
+Data        &B01111111
+Data        &B01001001
+Data        &B01001001
+Data        &B00001111
+Data        &B00000110
 
 
-Data &B10000111                                             '7
-Data &B10001111
-Data &B10011000
-Data &B10110000
-Data &B11100000
-Data &B11000000
-
-Data &B01101110                                             '8
-Data &B11111111
-Data &B10010001
-Data &B10010001
-Data &B11111111
-Data &B01101110
+Data        &B01000000
+Data        &B01000111
+Data        &B01001111
+Data        &B01011000
+Data        &B01110000
+Data        &B01100000
 
 
-Data &B01100000                                             '9
-Data &B11110001
-Data &B10010001
-Data &B10010001
-Data &B11111111
-Data &B01111110
+Data        &B00110110
+Data        &B01111111
+Data        &B01001001
+Data        &B01001001
+Data        &B01111111
+Data        &B00110110
 
 
-Data &B00000000
-Data &B00000000
-Data &B00000000
-Data &B00000000
-Data &B00000000
-Data &B00000000
-
-Tbl_digp:
-Data &B00011110                                             '0
-Data &B00100001
-Data &B00100001
-Data &B00011110
+Data        &B00110000
+Data        &B01111001
+Data        &B01001001
+Data        &B01001001
+Data        &B01111111
+Data        &B00111110
 
 
-Data &B00000000                                             '1
-Data &B00010001
-Data &B00111111
-Data &B00000001
+Data        &B00000000
+Data        &B00000000
+Data        &B00000000
+Data        &B00000000
+Data        &B00000000
+Data        &B00000000
 
 
-Data &B00100111                                             '2
-Data &B00101001
-Data &B00101001
-Data &B00010001
+Tbl_dig2:
+Data        &B00111110
+Data        &B01000001
+Data        &B01000001
+Data        &B01000001
+Data        &B00111110
+Data        &B00000000
 
+Data        &B00000000
+Data        &B00100001
+Data        &B01111111
+Data        &B00000001
+Data        &B00000000
+Data        &B00000000
 
-Data &B00100001                                             '3
-Data &B00101001
-Data &B00101001
-Data &B00010110
+Data        &B00100001
+Data        &B01000011
+Data        &B01000101
+Data        &B01001001
+Data        &B00110001
+Data        &B00000000
 
+Data        &B01000010
+Data        &B01000001
+Data        &B01010001
+Data        &B01101001
+Data        &B01000110
+Data        &B00000000
 
-Data &B00111000                                             '4
-Data &B00000100
-Data &B00000100
-Data &B00111111
-
-
-Data &B00111001                                             '5
-Data &B00101001
-Data &B00101001
-Data &B00100110
-
-
-Data &B00011110                                             '6
-Data &B00101001
-Data &B00101001
-Data &B00000110
-
-
-Data        &B00100011
+Data        &B00001100
+Data        &B00010100
 Data        &B00100100
-Data        &B00101000
-Data &B00110000
+Data        &B01111111
+Data        &B00000100
+Data        &B00000000
 
+Data        &B01110010
+Data        &B01010001
+Data        &B01010001
+Data        &B01010001
+Data        &B01001110
+Data        &B00000000
 
-Data        &B00010110
-Data        &B00101001
-Data        &B00101001
-Data        &B00010110
-
-
-Data        &B00011000
-Data        &B00100101
-Data        &B00100101
 Data        &B00011110
+Data        &B00101001
+Data        &B01001001
+Data        &B01001001
+Data        &B00000110
+Data        &B00000000
 
+Data        &B01000000
+Data        &B01000111
+Data        &B01001000
+Data        &B01010000
+Data        &B01100000
+Data        &B00000000
+
+Data        &B00110110
+Data        &B01001001
+Data        &B01001001
+Data        &B01001001
+Data        &B00110110
+Data        &B00000000
+
+Data        &B00110000
+Data        &B01001001
+Data        &B01001001
+Data        &B01001010
+Data        &B00111100
+Data        &B00000000
 
 Data        &B00000000
 Data        &B00000000
+Data        &B00000000
+Data        &B00000000
+Data        &B00000000
 Data &B00000000
-Data &B00000000
+
 
 Loaded_arch:
