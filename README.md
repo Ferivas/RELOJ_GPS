@@ -22,3 +22,6 @@ tblposdig=[10,2,23,16,25,31]
 
 en donde el elemento 0 corresponde a la posición de las unidades de minuto, el elemento 1 a las decenas de minuto, el elemento 2 a las unidades de hora y el elemento 3 a las decenas de hora. 
 
+El reloj por el frente
+
+<img width="600" alt="Pos Columnas" src="https://github.com/Ferivas/RELOJ_GPS/blob/master/DOCS/Reloj_frente.jpg">
