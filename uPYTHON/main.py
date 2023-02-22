@@ -42,7 +42,8 @@ spi = machine.SPI(-1, sck = clkPin, mosi = dataPin, miso = misoPin)
 
 columnas=[0b00000001,0b00000010,0b00000100,0b00001000,0b00010000,0b00100000,0b01000000,0b10000000]
 #tblposdig=[1,9,19,27,25,31]
-tblposdig=[1,10,19,27,25,31]
+#tblposdig=[1,10,19,27,25,31]
+tblposdig=[10,2,23,16,25,31]
 coldata = bytearray(columnas)
 datocolumna=bytearray(1)
 ptrcol=0
@@ -55,8 +56,8 @@ def handleInterrupt(timer):
     oePin.on()
     datocolumna=coldata[ptrcol]
     datodat=buffram[ptrcol]
-    ptrcol=ptrcol+1
-    ptrcol=ptrcol%8
+#    ptrcol=ptrcol+1
+#    ptrcol=ptrcol%8
     serialWrite(datocolumna,datocero)
     serialWrite(datocolumna,datocero)
     serialWrite(datocolumna,datocero)
@@ -65,7 +66,10 @@ def handleInterrupt(timer):
     serialWrite(datocolumna,buffram[ptrcol+8])
     serialWrite(datocolumna,buffram[ptrcol+16])
     serialWrite(datocolumna,buffram[ptrcol+24])        
-    oePin.off() 
+    oePin.off()
+    ptrcol=ptrcol+1
+    ptrcol=ptrcol%8
+    
     interruptCounter=True
 
 interruptCounter = False
@@ -101,11 +105,10 @@ def gendig(valdig,posdig):
     #print("Ptrpos>",ptrpos)
     for i in range(6):
         ptr=ptrdig+i
-        #print("ptr>",ptr)
         datadig=TBLDIG[ptr]
-        ptr2=ptrpos+i-1
+        #ptr2=ptrpos+i-1
+        ptr2=ptrpos+i
         buffram[ptr2]=datadig
-        #print("ptr2>",ptr2)
     
 
 def getntptime():
@@ -141,66 +144,86 @@ def getntptime():
      cmdclk=dia+mes+anio[2:]+hora+minu+seg
      print(cmdclk)
 
-TBLDIG=[0B01111110,
-0B11111111,
-0B10000001,
-0B10000001,
-0B11111111,
-0B01111110,
+TBLDIG=[0B01111100,
+0B11111110,
+0B10000010,
+0B10000010,
+0B11111110,
+0B01111100,
+
+
 0B00000000,
-0B00000001,
-0B11111111,
-0B11111111,
-0B01000001,
+0B10000100,
+0B11111110,
+0B11111110,
+0B10000000,
+0B00000000,
+
+
+0B10000100,
+0B11000010,
+0B11100010,
+0B10110010,
+0B10011110,
+0B10001100,
+
+
+0B10000010,
+0B10000010,
+0B10010010,
+0B10010010,
+0B11111110,
+0B01101100,
+
+
+0B00111100,
+0B00111100,
 0B00100000,
-0B01100001,
-0B11110001,
-0B10010001,
-0B10010001,
-0B10011111,
-0B10001111,
-0B01101110,
-0B11111111,
-0B10010001,
-0B10010001,
-0B10010001,
-0B10000001,
-0B11111111,
-0B11111111,
-0B00001000,
-0B00001000,
-0B11111000,
-0B11110000,
-0B10001110,
-0B10011111,
-0B10010001,
-0B10010001,
-0B11110001,
-0B11110001,
-0B00001110,
-0B10011111,
-0B10010001,
-0B10010001,
-0B11111111,
-0B01111110,
-0B11000000,
-0B11100000,
-0B10110000,
-0B10011000,
-0B10001111,
-0B10000111,
-0B01101110,
-0B11111111,
-0B10010001,
-0B10010001,
-0B11111111,
-0B01101110,
-0B01111110,
-0B11111111,
-0B10010001,
-0B10010001,
-0B11110001,
+0B11111110,
+0B11111110,
+0B00100000,
+
+
+0B01011110,
+0B11011110,
+0B10010010,
+0B10010010,
+0B11110010,
+0B01100010,
+
+
+0B01111100,
+0B11111110,
+0B10010010,
+0B10010010,
+0B11110010,
 0B01100000,
+
+
+0B00000010,
+0B11100010,
+0B11110010,
+0B00011010,
+0B00001110,
+0B00000110,
+
+
+0B01101100,
+0B11111110,
+0B10010010,
+0B10010010,
+0B11111110,
+0B01101100,
+
+
+0B00001100,
+0B10011110,
+0B10010010,
+0B10010010,
+0B11111110,
+0B01111100,
+
+
 0B00000000,
 0B00000000,
 0B00000000,
@@ -266,9 +289,11 @@ while True:
      cntrdig=cntrdig+1
      tc=cntrdig%2
      if tc==0:
-         buffram[17]=0b00000000
+         buffram[31]=0b00000000
+         buffram[30]=0b00000000
      else:
-         buffram[17]=0b00110110
+         buffram[31]=0b01101100
+         buffram[30]=0b01101100
      tclk=time.time()
      tclk=tclk-18000
      #tfloat=float(tclk)
