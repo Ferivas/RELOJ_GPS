@@ -8,11 +8,6 @@ import wifimgr
 #Declaracion de pines y constantes
 ntptime.host = "pool.ntp.org"
 
-LEDPIN=5
-led=Pin(LEDPIN,Pin.OUT)
-
-LEDBUG=18
-ledbug=Pin(LEDBUG,Pin.OUT)
 
 NUMMATRIZ=4
 LONGBUF=NUMMATRIZ*8
@@ -21,14 +16,29 @@ buffram=[]
 for i in range(LONGBUF+1):
     buffram.append(datocero)
 
-oe = 27
-oePin = machine.Pin(oe, machine.Pin.OUT)
+VERSION_HW=1
+
 #Config HW
-data = 26;    # pin connected to the serial input of the MAX7219 (DIN)
-load = 33;    # pin for loading data (CS)
-clk  = 25;    # pin for the clock of the serial link (CLK)
-miso=15 #notused
+if VERSION_HW==1:
+    LEDPIN=5
+    oe = 27
+    data = 26;    # pin connected to the serial input of the MAX7219 (DIN)
+    clk  = 25;    # pin for the clock of the serial link (CLK)    
+    load = 33;    # pin for loading data (CS)
+    miso=15 #notused
+    
+if VERSION_HW==2:
+    LEDPIN=2
+    oe = 27
+    data = 14;    # pin connected to the serial input of the MAX7219 (DIN)
+    clk = 12;    # pin for loading data (CS)
+    load  = 13;    # pin for the clock of the serial link (CLK)
+    miso=15 #notused
+
+led=Pin(LEDPIN,Pin.OUT)
+
 # Initialize the pins as outputs
+oePin = machine.Pin(oe, machine.Pin.OUT)
 dataPin = machine.Pin(data, machine.Pin.OUT)
 loadPin = machine.Pin(load, machine.Pin.OUT)
 clkPin  = machine.Pin(clk, machine.Pin.OUT)
