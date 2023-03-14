@@ -16,7 +16,7 @@ buffram=[]
 for i in range(LONGBUF+1):
     buffram.append(datocero)
 
-VERSION_HW=1
+VERSION_HW=2
 
 #Config HW
 if VERSION_HW==1:
@@ -50,6 +50,7 @@ clkPin.off()
 
 spi = machine.SPI(-1, sck = clkPin, mosi = dataPin, miso = misoPin)
 
+flaginternet=False
 columnas=[0b00000001,0b00000010,0b00000100,0b00001000,0b00010000,0b00100000,0b01000000,0b10000000]
 #tblposdig=[1,9,19,27,25,31]
 #tblposdig=[1,10,19,27,25,31]
@@ -73,9 +74,14 @@ def handleInterrupt(timer):
     serialWrite(datocolumna,datocero)
     serialWrite(datocolumna,datocero)
     serialWrite(datocolumna,datodat)
+#    if flaginternet:
     serialWrite(datocolumna,buffram[ptrcol+8])
     serialWrite(datocolumna,buffram[ptrcol+16])
-    serialWrite(datocolumna,buffram[ptrcol+24])        
+    serialWrite(datocolumna,buffram[ptrcol+24])
+#     else:
+#         serialWrite(datocolumna,0b00000001)
+#         serialWrite(datocolumna,0b00000010)
+#         serialWrite(datocolumna,0b00000100)
     oePin.off()
     ptrcol=ptrcol+1
     ptrcol=ptrcol%8
@@ -254,6 +260,13 @@ gendig(1,3)
 tick=0
 newdig=False
 cntrdig=0
+time.sleep(1)
+gendig(10,0)
+gendig(10,1)
+gendig(10,2)
+gendig(10,3)
+buffram[30]=0b11000000
+
 
 try:
     profiles = wifimgr.read_profiles()
@@ -268,6 +281,7 @@ if wlan is None:
     while True:
         pass  # you shall not pass :D
 
+flaginternet=True
 
 try:
     getntptime()
@@ -338,6 +352,7 @@ while True:
      if umin!=uminant:
          uminant=umin
          newd=True
+         #newntp=True         
 
      if newd:
          newd=False
@@ -348,10 +363,15 @@ while True:
       
      if newntp:
         newntp=False
+        gendig(10,0)
+        gendig(10,1)
+        gendig(10,2)
+        gendig(10,3)        
         try:
             getntptime()
         except:
-            print("Err NTP")         
+            print("Err NTP")
+        newd=True
       
       
 print("FIN tst Timer")      
