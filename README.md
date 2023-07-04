@@ -29,5 +29,8 @@ El reloj por el frente
 ## BUGS RELOJ BASADO EN ESP32 CON TARJETA JLCPCB
 ### BUGS HARDWARE
 Se debe desconectar la línea PWM que une a los dos drivers. Esta línea se debe manejar por separado. Cuando estaban unidos solo se enciende el segundo driver.
+El corte esta indicado en la figura siguiente:
+
+<img width="600" alt="Pos Columnas" src="https://github.com/Ferivas/RELOJ_GPS/blob/master/MatrizJLCPCB/SCH/Parche_PCB.jpg">
 
 
