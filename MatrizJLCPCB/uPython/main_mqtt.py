@@ -1,5 +1,5 @@
 import machine
-from machine import Pin,SoftSPI
+from machine import Pin,SoftSPI,PWM
 import time
 import ntptime
 import wifimgr
@@ -51,6 +51,11 @@ loadPin.off()
 clkPin.off()
 oePin.off()
 
+#Control brillo PWM
+frequency = 5000
+oecontrol = PWM(Pin(oe), frequency)
+oecontrol.duty(800)
+
 spi = SoftSPI(sck = clkPin, mosi = dataPin, miso = misoPin)
 spi.init(baudrate=100000)
 
@@ -87,6 +92,7 @@ buffer = bytearray(2)
 def serialWrite(dig1, dig2,dig3,dig4):
     # Set CS to 0 to create a rising edge later
     oePin.on()
+    oecontrol.duty(1023)
     buffer[0] = dig1
     buffer[1] = dig2
     spi.write(buffer)
@@ -98,6 +104,7 @@ def serialWrite(dig1, dig2,dig3,dig4):
     loadPin.on()
     loadPin.off()
     oePin.off()
+    oecontrol.duty(brillopwm)
 
 def gendig(valdig):
     datadig=TBLDIG[valdig]
@@ -159,7 +166,7 @@ try:
 except:
     print("Inicializando conf inicial")
     varconfig={"equipo":EQUIPO,"tiempontp":3600,"huso":-18000,"chatid":"727498654",
-               "botid":"1737167982:AAEfbJSqPZ9RB084GFqNEo_xBPcZRVERbLk","enamsg":False}
+               "botid":"1737167982:AAEfbJSqPZ9RB084GFqNEo_xBPcZRVERbLk","enamsg":True,"brillo":10,"cntrini":0}
     print("Guardando Var file")
     with open(FILECONFIG,'w') as f:
         ujson.dump(varconfig,f)
@@ -172,6 +179,14 @@ print("huso=",huso)
 CHATID=varconfig.get("chatid")
 BOTID=varconfig.get("botid")
 ENAMSG=varconfig.get("enamsg")
+brilloval=varconfig.get("brillo")
+print("brillo=",brilloval)
+cntrini=varconfig.get("cntrini")
+print("cntrini=",cntrini)
+
+brillopwm=round(-brilloval*1023/100+1023)
+oecontrol.duty(brillopwm)
+
 print("Telegram>",CHATID,BOTID,ENAMSG)
 EQUIPO=varconfig.get("equipo")
 print("Equipo>",EQUIPO)
@@ -189,7 +204,15 @@ message_interval = 10
 counter = 0
 client_id = ubinascii.hexlify(machine.unique_id())
 client_idstr=client_id.decode('utf-8')
-print(client_id) 
+print(client_id)
+cntrini=cntrini+1
+print("Cntrini=",cntrini)
+try:
+    saveKey(varconfig, "cntrini",cntrini)
+    with open(FILECONFIG,'w') as f:
+        ujson.dump(varconfig,f)
+except:
+    print("Err save cntrini")
 
 # Defino pin para seleccionar el broker
 botonbroker=Pin(PINSELBRK, Pin.IN,Pin.PULL_UP)
@@ -231,6 +254,7 @@ tick=0
 newdig=False
 cntrdig=0
 time.sleep(1)
+reinicio=0
 # digito1=gendig(10)
 # digito2=gendig(10)
 # digito3=gendig(10)
@@ -302,7 +326,7 @@ while True:
     newmqttcmd=False
     
     topicname=["cmdrx","config","ackresp","onoff","tiempontp",
-               "huso"]
+               "huso","brillo"]
     topiclist=[]
     ptr=0
     for i in topicname:
@@ -316,7 +340,10 @@ while True:
     
     print(topiclist)
     
-    atsnd=EQUIPO + " ID "+client_idstr+ " inicia operacion en broker "+mqtt_server+", tiempontp="+str(tiempontp)+", huso="+str(huso)
+    if reinicio==0:
+        atsnd=EQUIPO + " ID "+client_idstr+ " inicia operacion en broker "+mqtt_server+", tiempontp="+str(tiempontp)+", huso="+str(huso)+", brillo="+str(brilloval)+ ", cntrini="+str(cntrini)
+    if reinicio==1:
+        atsnd=EQUIPO + " ID "+client_idstr+ " REINICIO en broker "+mqtt_server+", tiempontp="+str(tiempontp)+", huso="+str(huso)+", brillo="+str(brilloval)+ ", cntrini="+str(cntrini)
     print(atsnd)
     
     try:
@@ -349,21 +376,64 @@ while True:
                 print('ESPcmdtiempontp>',mqttcmd)
                 comando=mqttcmd.decode('utf-8')
                 print("Cmd>",comando)
+                try:
+                    tiempoval=int(comando)
+                    tiempontp=tiempoval*3600
+                    print("tiempontp=",tiempontp, "seg")
+                    saveKey(varconfig, "tiempontp",tiempontp)
+                    with open(FILECONFIG,'w') as f:
+                        ujson.dump(varconfig,f)
+                    
+                except:
+                    print("err tiempontp")
 
               if mqtttopic == topiclist[5]:
                 print('ESPcmdhuso>',mqttcmd)
                 comando=mqttcmd.decode('utf-8')
                 print("Cmd>",comando)
+                try:
+                    husof=float(comando)*3600
+                    huso=int(husof)
+                    print("Huso=",huso)
+                    saveKey(varconfig, "huso",huso)
+                    with open(FILECONFIG,'w') as f:
+                        ujson.dump(varconfig,f)
 
+                except:
+                    print("err huso")
+                
+                
+              if mqtttopic == topiclist[6]:
+                print('ESPcmdbrillo>',mqttcmd)
+                brillostr=mqttcmd.decode('utf-8')
+                print("Cmd>",brillostr)
+                brilloval=int(brillostr)
+                brillopwm=round(-brilloval*1023/100+1023)
+                print(brillopwm)
+                oecontrol.duty(brillopwm)
+                try:
+                    print("Save brillo")
+                    saveKey(varconfig, "brillo",brilloval)
+                    with open(FILECONFIG,'w') as f:
+                        ujson.dump(varconfig,f)
+
+                except:
+                    print("err savekey")
+                
 
         
             if newdig:
              newdig=False
-             #print(time.localtime())
+             #print(time.time())
+             if tiempontp!=0:
+                 tntp=time.time()%tiempontp
+                 if tntp==0:
+                     print("nuevo NTP")
+                     newntp=True
              cntrdig=cntrdig+1
              tc=cntrdig%2
              tclk=time.time()
-             tclk=tclk-18000
+             tclk=tclk+huso
              #tfloat=float(tclk)
              tval = time.localtime (tclk)     
              if tval[3]<10:
@@ -387,7 +457,7 @@ while True:
                  newd=True
              if uhora!=uhoraant:
                  uhoraant=uhora
-                 newntp=True         
+                 #newntp=True         
                  newd=True
         
              if dmin!=dminant:
