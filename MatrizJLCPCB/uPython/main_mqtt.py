@@ -54,7 +54,7 @@ oePin.off()
 #Control brillo PWM
 frequency = 5000
 oecontrol = PWM(Pin(oe), frequency)
-oecontrol.duty(800)
+oecontrol.duty(1000)
 
 spi = SoftSPI(sck = clkPin, mosi = dataPin, miso = misoPin)
 spi.init(baudrate=100000)
@@ -497,14 +497,17 @@ while True:
 
              if (time.time() - last_message) > message_interval:
                 msg = client_idstr+","+str(counter)
-                client.publish(topic_pub, msg)
-                #client.publish(topiclist[1], msg)
+                try:
+                    client.publish(topic_pub, msg)
+                except:
+                    print("Err pub")
                 last_message = time.time()
-                counter += 1 
+                counter += 1                    
 
         except OSError as e:
             print("Uy>",e)
             restart_and_reconnect()
+            reinicio=1
             brokerok=False                
                 
         
