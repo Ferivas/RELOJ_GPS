@@ -6,8 +6,8 @@ print("Ini")
 time.sleep(0.2)
 #change the volume (0-30). The DFPlayer doesn't remember these settings
 print("Set vol a 25")
-df.volume(15)
+df.volume(25)
 time.sleep(0.2)
 #play file ./01/001.mp3
 print("Play file")
-df.play(1,10)
+df.play(2,3)
